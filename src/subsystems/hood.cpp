@@ -4,7 +4,7 @@
 Hood* Hood::globalRef = nullptr; 
 
 void Hood::init()
-{    
+{ 
     set<bool>("isOn", true);
 }
 

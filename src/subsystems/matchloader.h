@@ -15,7 +15,9 @@ public:
     Matchloader() : Subsystem(
         "matchloader",
         {(EntrySet){"isOn", EntryType::BOOL}}
-    ) { 
+    ), 
+    matchloaderPiston(vex::pneumatics(Brain.ThreeWirePort.H))  
+    { 
         globalRef = this;
     };
 
@@ -28,7 +30,9 @@ public:
     void retract();
 protected:
     using Subsystem::set; 
-private: 
+private:  
+    vex::pneumatics matchloaderPiston; 
+
     bool shouldDeploy(); 
 };
 

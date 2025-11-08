@@ -1,10 +1,13 @@
 #include "vex.h"
 #include "indexer.h"
 
-Indexer* Indexer::globalRef = nullptr; 
+Indexer* Indexer::globalRef = nullptr;  
+
+double Indexer::ABSOLUTE_INDEXER_SPEED = 200; 
 
 void Indexer::init()
-{
+{  
+  Telemetry::inst.placeValueAt<double>(indexerMotor.temperature(), "Motor_Temps","IndexerMotor");
   set<bool>("isOn", true);
 };
 

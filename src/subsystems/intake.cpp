@@ -4,9 +4,12 @@
 
 Intake* Intake::globalRef = nullptr; 
 
+double Intake::ABSOLUTE_INTAKE_SPEED = 200;  
+
 void Intake::init()
-{
-    set<bool>("isOn", true);
+{  
+    Telemetry::inst.placeValueAt<double>(intakeMotor.temperature(), "Motor_Temps","IntakeMotor");
+    set<bool>("blockedByCubes", false); 
 };
 
 void Intake::periodic()
@@ -27,8 +30,8 @@ void Intake::periodic()
 };
 
 void Intake::updateTelemetry()
-{
-    return;
+{ 
+   return;
 }
 
 bool Intake::shouldIntake()
@@ -44,13 +47,13 @@ bool Intake::shouldOuttake()
            getFromInputs<bool>("Controller/Button_RIGHT");
 } 
 
-void Intake::intake(){ 
-    intakeMotor.setVelocity(-100, vex::percentUnits::pct); 
+void Intake::intake(){  
+    intakeMotor.setVelocity(-ABSOLUTE_INTAKE_SPEED, vex::velocityUnits::rpm); 
     intakeMotor.spin(vex::directionType::fwd);
 }  
 
 void Intake::outtake(){ 
-    intakeMotor.setVelocity(50, vex::percentUnits::pct); 
+    intakeMotor.setVelocity(ABSOLUTE_INTAKE_SPEED * 0.5, vex::velocityUnits::rpm); 
     intakeMotor.spin(vex::directionType::fwd);
 }  
 

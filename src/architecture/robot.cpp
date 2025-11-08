@@ -111,7 +111,23 @@ void Robot::registerSystemSubtable()
           (EntrySet){"Controller/Button_L2", EntryType::BOOL},
           (EntrySet){"Controller/Button_R1", EntryType::BOOL},
           (EntrySet){"Controller/Button_R2", EntryType::BOOL},
-      });
+      } 
+  ); 
+
+  Telemetry::inst.registerSubtable( 
+     "Motor_Temps", 
+     { 
+      (EntrySet){"DriveFrontLeft",EntryType::DOUBLE}, 
+      (EntrySet){"DriveMidLeft",EntryType::DOUBLE}, 
+      (EntrySet){"DriveBackLeft",EntryType::DOUBLE}, 
+      (EntrySet){"DriveFrontRight",EntryType::DOUBLE}, 
+      (EntrySet){"DriveMidRight",EntryType::DOUBLE}, 
+      (EntrySet){"DriveBackRight",EntryType::DOUBLE}, 
+      (EntrySet){"IntakeMotor", EntryType::DOUBLE}, 
+      (EntrySet){"HopperMotor", EntryType::DOUBLE}, 
+      (EntrySet){"IndexerMotor", EntryType::DOUBLE}
+     }
+  );
 };
 
 void Robot::driverControl(bool mirrorControlled)

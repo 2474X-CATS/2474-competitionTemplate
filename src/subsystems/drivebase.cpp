@@ -1,65 +1,128 @@
 #include "drivebase.h"
 #include "math.h"
-#include "../architecture/telemetry.h"
+#include "../architecture/telemetry.h" 
+
 #include <algorithm>
 
 //---Drivebase: SUBSYSTEM
 
 Drivebase* Drivebase::globalRef = nullptr; 
 
+double Drivebase::DRIVE_WHEEL_RADIUS_MM = 76.2; 
+
+void Drivebase::declareLocations(){    
+   locations[0] = new Location( 
+   "native-matchloader", 
+    0, 
+    1000, 
+    100, 
+    0, 
+    30
+   );  
+   locations[1] = nullptr; 
+   locations[2] = nullptr; 
+   locations[3] = nullptr; 
+   locations[4] = nullptr; 
+   locations[5] = nullptr;  
+   locations[6] = nullptr; 
+   locations[7] = nullptr; 
+   locations[8] = nullptr; 
+   locations[9] = nullptr; 
+   locations[10] = nullptr;  
+   locations[11] = nullptr; 
+   locations[12] = nullptr; 
+   locations[13] = nullptr; 
+   locations[14] = nullptr; 
+   locations[15] = nullptr;  
+   locations[16] = nullptr; 
+   locations[17] = nullptr; 
+
+
+}; 
+
 void Drivebase::init()
-{
+{  
    leftDriveMotors.setStopping(vex::brakeType::brake);
    rightDriveMotors.setStopping(vex::brakeType::brake);
-
+   
+   //driveGyro.setTurnType(vex::turnType::left);
    driveGyro.calibrate();
    while (driveGyro.isCalibrating())
    {
       vex::this_thread::yield();
    }
 
-   driveGyro.setHeading(0, vex::rotationUnits::deg);
+   driveGyro.resetHeading();
 
    powerPID.P = 0.8;
    powerPID.I = 0.0001;
    powerPID.D = 0.01;
-   powerPID.errorTolerance = 2.5;
+   powerPID.errorTolerance = 1;
    //------------------------------
    turnPID.P = 0.8;
    turnPID.I = 0.0005;
    turnPID.D = 0;
-   turnPID.errorTolerance = 3;
+   turnPID.errorTolerance = 1;
 
    set<double>("Pos_X", startX + ROBOT_WIDTH_MM / 2);
    set<double>("Pos_Y", startY + ROBOT_LENGTH_MM / 2);
-   set<string>("Current_Location", "NONE");
+   set<string>("Current_Location", "NONE"); 
+
+   declareLocations();
 };
 
 void Drivebase::periodic()
 { 
    arcadeDrive((double)getFromInputs<int>("Controller/Axis-Vert-Left"), (double)getFromInputs<int>("Controller/Axis-Hori-Right"));
-};
+}; 
 
 void Drivebase::updateTelemetry()
 {
    double x = get<double>("Pos_X");
    double y = get<double>("Pos_Y");  
-   set<double>("Angle_Degrees", driveGyro.heading()); 
+   set<double>("Angle_Degrees_CCW", fmod(90 - driveGyro.heading() + 360, 360)); 
 
    double rpmToDist = (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) * 0.02;
    double hypotenuse = ((leftDriveMotors.velocity(vex::velocityUnits::rpm) - rightDriveMotors.velocity(vex::velocityUnits::rpm)) / 2) / 60 * rpmToDist; // Times 0.02 because that is the time interval
 
-   double angleRadians = get<double>("Angle_Degrees") * M_PI / 180.0;
+   double angleRadians = get<double>("Angle_Degrees_CCW") * (2*M_PI) / 360;
 
-   x += hypotenuse * cos(angleRadians);
-   y += hypotenuse * sin(angleRadians);
+   x += (hypotenuse * cos(angleRadians));
+   y += (hypotenuse * sin(angleRadians));
 
    set<double>("Pos_X", x);
    set<double>("Pos_Y", y);     
-   set<double>("Velocity_mm/20ms", hypotenuse);
+   set<double>("Velocity_mm/20ms", hypotenuse);  
+   
+   //Brain.Screen.printAt(20, 200, "Currently visiting: "); 
+   
+   Brain.Screen.printAt(20,100,"X: %f",get<double>("Pos_X"));  
+   Brain.Screen.printAt(20,125,"Y: %f",get<double>("Pos_Y"));  
+   Brain.Screen.printAt(20,150,"Angle: %f", get<double>("Angle_Degrees_CCW"));   
+   
+   set<string>("Current_Location","NONE");  
+   for (int index = 0; index < 18; index ++){ 
+      if (locations.at(index) != nullptr){ 
+         Location* currentLocation = locations.at(index);
+         if (currentLocation->isRobotVisiting()){  
+            set<string>("Current_Location",currentLocation->getName()); 
+            Controller.rumble("-");
+         }
+      } else { 
+         continue; 
+      }
+   }  
+   Brain.Screen.printAt(20,175, get<string>("Current_Location").c_str());
 
-   Brain.Screen.print(get<double>("Angle_Degrees")); 
-   Brain.Screen.newLine();
+   Telemetry::inst.placeValueAt<double>(driveFrontLeft.temperature(), "Motor_Temps","DriveFrontLeft"); 
+   Telemetry::inst.placeValueAt<double>(driveFrontRight.temperature(), "Motor_Temps","DriveFrontRight"); 
+   Telemetry::inst.placeValueAt<double>(driveMidLeft.temperature(), "Motor_Temps","DriveMidLeft"); 
+   Telemetry::inst.placeValueAt<double>(driveMidRight.temperature(), "Motor_Temps","DriveMidRight"); 
+   Telemetry::inst.placeValueAt<double>(driveBackLeft.temperature(), "Motor_Temps","DriveBackLeft"); 
+   Telemetry::inst.placeValueAt<double>(driveBackRight.temperature(), "Motor_Temps","DriveBackRight"); 
+  
+   
+   
 }; 
 
 /*

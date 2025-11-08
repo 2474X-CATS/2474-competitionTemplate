@@ -31,7 +31,7 @@ double pidcontroller::calculate(double position, double timestamp)
 {
    double dt = timestamp - lastTimestamp;
    lastTimestamp = timestamp;
-   error = setpoint - position; 
+   double error = setpoint - position; 
    if (atSetpoint(position)) 
       return 0;
    integral += error * dt;
@@ -54,4 +54,10 @@ void pidcontroller::setLastTimestamp(double timestamp)
 
 double pidcontroller::getSetpoint(){ 
    return setpoint;
+} 
+
+void pidcontroller::reset(){ 
+   integral = 0; 
+   derivative = 0;  
+   prevError = 0;  
 }

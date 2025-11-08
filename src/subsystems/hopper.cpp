@@ -5,7 +5,7 @@
 Hopper* Hopper::globalRef = nullptr; 
 
 void Hopper::init()
-{
+{  
     hopperMotor.setStopping(vex::brakeType::brake);     // makes motor hold still when stopped
     hopperMotor.setVelocity(0, vex::percentUnits::pct); // start off stopped
     set<bool>("isOn", true);                            // says the hopper is ready to go
@@ -14,7 +14,7 @@ void Hopper::init()
 // if you had a dashboard you could send data from here
 void Hopper::updateTelemetry()
 {
-    return;
+    Telemetry::inst.placeValueAt<double>(hopperMotor.temperature(), "Motor_Temps","HopperMotor"); 
 }
 
 void Hopper::periodic()
@@ -35,8 +35,8 @@ void Hopper::periodic()
 }
 
 void Hopper::dispenseCubes(){ 
-    hopperMotor.setVelocity(-100, vex::percentUnits::pct); 
-    hopperMotor.spin(vex::directionType::fwd);
+     hopperMotor.setVelocity(-100, vex::percentUnits::pct); 
+     hopperMotor.spin(vex::directionType::fwd); 
 } 
 
 void Hopper::mixHopper(){ 

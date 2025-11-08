@@ -14,8 +14,11 @@ public:
 
     Intake() : Subsystem(
                     "intake",
-                    {(EntrySet){"isOn", EntryType::BOOL}
-                    }) { 
+                    {(EntrySet){"blockedByCubes", EntryType::BOOL}
+                    }), 
+                    intakeMotor(vex::motor(vex::PORT18, false))
+                    //channelSensor(vex::distance(vex::PORT13))
+                    { 
                         globalRef = this;
                     }  
     void init() override; 
@@ -26,7 +29,12 @@ public:
     void intake(); 
     void outtake();  
 
-private: 
+private:   
+    static double ABSOLUTE_INTAKE_SPEED; 
+    vex::motor intakeMotor;  
+
+    //vex::distance channelSensor; 
+
     bool shouldIntake(); 
     bool shouldOuttake();   
     

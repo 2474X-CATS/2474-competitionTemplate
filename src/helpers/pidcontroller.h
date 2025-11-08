@@ -22,7 +22,6 @@ private:
 
   double lastTimestamp = 0;
 
-  double error = 0;
   double integral = 0;
   double derivative = 0;
 
@@ -46,7 +45,9 @@ public:
 
   void setSetpoint(double setpoint);
 
-  void setLastTimestamp(double timestamp);
+  void setLastTimestamp(double timestamp); 
+
+  void reset();
 };
 
 #endif

@@ -4,7 +4,7 @@
 
 Matchloader* Matchloader::globalRef = nullptr;
 
-void Matchloader::init() {
+void Matchloader::init() { 
     matchloaderPiston.close();
     set<bool>("isOn", true); 
 }

@@ -15,7 +15,9 @@ public:
 
     Hood() : Subsystem(
                  "hood",
-                 {(EntrySet){"isOn", EntryType::BOOL}}) { 
+                 {(EntrySet){"isOn", EntryType::BOOL}}), 
+                 hoodPiston(vex::pneumatics(Brain.ThreeWirePort.G))  
+                 { 
                     globalRef = this;
                  } 
 
@@ -29,7 +31,9 @@ public:
 
 protected: 
     using Subsystem::set;
-private:  
+private:   
+    vex::pneumatics hoodPiston; 
+
     bool holding = false;  
 
     bool shouldOpen(); 

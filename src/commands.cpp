@@ -1,25 +1,23 @@
 #include "commands.h" 
 
-//////////////////////////////////////////////////////////// 
-void DriveForwardBy::start(){  
+////////////////////////////////////////////////////////////  
+/*
+void DriveForwardBy::start(){   
+
     driveRef.setSpeedFactor(1);
     startingPoint[0] = driveRef.get<double>("Pos_X"); 
     startingPoint[1] = driveRef.get<double>("Pos_Y");  
     control->setLastTimestamp(Brain.Timer.time());   
-    Brain.Screen.print("Made it to the start");
 };
-
 void DriveForwardBy::periodic(){ 
-    double output = control->calculate(getDistTraveled(), Brain.Timer.time()) * 2;  
+    double output = control->calculate(getDistTraveled(), Brain.Timer.time());  
     if (!goingForward) 
         output = -output;
     driveRef.manualDriveForward(output);
 }; 
-
 bool DriveForwardBy::isOver(){ 
     return control->atSetpoint(getDistTraveled());
 };
-
 void DriveForwardBy::end(){ 
     driveRef.stop();  
     driveRef.setSpeedFactor(0.85); 
@@ -28,9 +26,133 @@ void DriveForwardBy::end(){
 double DriveForwardBy::getDistTraveled(){ 
     return hypot(driveRef.get<double>("Pos_X") - startingPoint[0], driveRef.get<double>("Pos_Y") - startingPoint[1]); 
 }; 
+*/  
+void DrivePath::start(){ 
+    initializeTurn();   
+}  
+
+void DrivePath::periodic(){ 
+    if (isDriving()){ 
+        drivePeriodic();
+    } else { 
+        turnPeriodic();
+    }
+} 
+
+bool DrivePath::isOver(){ 
+    return operationsIndex == numOfOperations;
+} 
+
+void DrivePath::end(){ 
+    return;
+}
+
+void DrivePath::drivePeriodic(){ 
+   if (!initialized){
+    initializeDrive();  
+    initialized = true;
+   } else { 
+    if (isDriveOver()){
+      operationsIndex += 1; 
+      initialized = false;  
+      drivebaseRef.stop(); 
+      delete drivePID; 
+    } else { 
+      drive();
+    }
+   }
+}  
+
+void DrivePath::turnPeriodic(){ 
+   if (!initialized){
+    initializeTurn();  
+    initialized = true;
+   } else { 
+    if (isTurnOver()){
+      operationsIndex += 1; 
+      initialized = false;  
+      drivebaseRef.stop(); 
+      delete turnPID;
+    } else { 
+      turn();
+    }
+   }
+} 
+
+bool DrivePath::isDriving(){ 
+   return !offset ? operationsIndex % 2 == 1 : operationsIndex % 2 == 0;
+} 
+
+bool DrivePath::isTurning(){ 
+   return !offset ? operationsIndex % 2 == 0 : operationsIndex % 2 == 1;
+}
+
+bool DrivePath::isDriveOver(){ 
+   return drivePID->atSetpoint(getDrivingError());
+} 
+
+void DrivePath::initializeDrive(){  
+
+    isGoingForward = setpoints.at(operationsIndex) > 0;  
+  
+    double xTrans = cos((drivebaseRef.get<double>("Angle_Degrees_CCW")) / 360 * (2*M_PI)) * setpoints.at(operationsIndex); 
+    double yTrans = sin((drivebaseRef.get<double>("Angle_Degrees_CCW")) / 360 * (2*M_PI)) * setpoints.at(operationsIndex); 
+
+    projectedPoint[0] = drivebaseRef.get<double>("Pos_X") + xTrans;   
+    projectedPoint[1] = drivebaseRef.get<double>("Pos_Y") + yTrans; 
+    
+    drivePID = new pidcontroller(drivebaseRef.getPowerPID(), 0);
+}  
+
+void DrivePath::drive(){ 
+    double output = fabs(drivePID->calculate(getDrivingError(), Brain.Timer.time()));  
+    if (!isGoingForward)  
+       output *= -1; 
+    drivebaseRef.manualDriveForward(output);
+} 
+
+double DrivePath::getDrivingError(){ 
+    return hypot(drivebaseRef.get<double>("Pos_X") - projectedPoint[0], drivebaseRef.get<double>("Pos_Y") - projectedPoint[1]);
+}
+
+bool DrivePath::isTurnOver(){ 
+    return turnPID->atSetpoint(getAngularError());
+} 
+
+void DrivePath::initializeTurn(){  
+    
+    double startAngle = drivebaseRef.get<double>("Angle_Degrees_CCW"); 
+    
+    double angleSetpoint = setpoints.at(operationsIndex); 
+    
+    double counterClockwiseDist = startAngle > angleSetpoint ? (360 - startAngle) + angleSetpoint : angleSetpoint - startAngle; 
+    double clockwiseDist = 360 - counterClockwiseDist; 
+    
+    isCounterClockwise = (clockwiseDist > counterClockwiseDist);
+  
+    turnPID = new pidcontroller(drivebaseRef.getTurningPID(), 0);    
+    turnPID->setLastTimestamp(Brain.Timer.time()); 
+} 
+
+void DrivePath::turn(){ 
+    double output = turnPID->calculate(getAngularError(), Brain.Timer.time());   
+    if (isCounterClockwise) 
+      output *= -1;
+    drivebaseRef.manualTurnClockwise(output); 
+}  
+
+double DrivePath::getAngularError(){ 
+    double currentAngle = drivebaseRef.get<double>("Angle_Degrees_CCW");  
+    double angleSetpoint = setpoints.at(operationsIndex);
+    double dist = currentAngle > angleSetpoint ? (360 - currentAngle) + angleSetpoint : angleSetpoint - currentAngle; 
+    if (!isCounterClockwise){ 
+        dist = 360 - dist;
+    } 
+    return dist;
+}
 
 ////////////////////////////////////////////////////////////  
-
+/*
 void DriveForwardWhileIntaking::start(){  
     hoodRef.close();
     startingPoint[0] = driveRef.get<double>("Pos_X"); 
@@ -59,7 +181,8 @@ void DriveForwardWhileIntaking::end(){
 
 double DriveForwardWhileIntaking::getDistTraveled(){ 
     return hypot(driveRef.get<double>("Pos_X") - startingPoint[0], driveRef.get<double>("Pos_Y") - startingPoint[1]); 
-};
+}; 
+*/
 ////////////////////////////////////////////////////////////
 
 void DriveForwardForTime::start(){ 
@@ -80,7 +203,7 @@ void DriveForwardForTime::end(){
     drivebaseRef.setSpeedFactor(0.85);
 }
 //////////////////////////////////////////////////////////// 
-
+/*
 void TurnToHeading::start(){   
   double startAngle = driveRef.get<double>("Angle_Degrees");
   double clockwiseDist = startAngle > angleSetpoint ? (360 - startAngle) + angleSetpoint : angleSetpoint - startAngle; 
@@ -111,7 +234,7 @@ double TurnToHeading::getAngluarDifference(){
     } 
     return dist;
 };
-
+*/
 ////////////////////////////////////////////////////////////  
 
 void IntakeToHopper::start(){ 
@@ -168,7 +291,7 @@ bool ScoreOnGoal::isOver(){
 void ScoreOnGoal::end(){ 
     intakeRef.stop(); 
     indexerRef.stop(); 
-    hopperMotor.stop();  
+    hopperRef.stop();  
 } 
 
 
@@ -219,15 +342,16 @@ void WaitFor::end(){
 
 
 
-
+/*
 CommandInterface* driveForwardByTiles(double tiles){ 
     return DriveForwardBy::getCommand(fabs(tiles * TILE_SIZE_MM), tiles > 0);
-}; 
-
+};  
+*/
+/*
 CommandInterface* turnToAngle(double goalHeading){ 
     return TurnToHeading::getCommand(goalHeading);
 }; 
-
+*/
 CommandInterface* scoreOnGoal(Goal_Pos position, double timeDuration){ 
     return ScoreOnGoal::getCommand(static_cast<int>(position), timeDuration);
 }; 
@@ -247,11 +371,11 @@ CommandInterface* extend(){
 CommandInterface* retract(){ 
     return DeployMatchloader::getCommand(false);
 };  
-
+/*
 CommandInterface* driveAndIntakeForTiles(double tiles){ 
     return DriveForwardWhileIntaking::getCommand(fabs(tiles * TILE_SIZE_MM), tiles > 0); 
 }; 
-
+*/
 CommandInterface* ramForwardFor(double percentage, double timeDuration){ 
     return DriveForwardForTime::getCommand(percentage, timeDuration);
 }

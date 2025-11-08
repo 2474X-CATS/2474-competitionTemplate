@@ -14,7 +14,9 @@ public:
 
    Indexer() : Subsystem(
                    "indexer",
-                   {(EntrySet){"isOn", EntryType::BOOL}}) { 
+                   {(EntrySet){"isOn", EntryType::BOOL}}),  
+                   indexerMotor(vex::motor(vex::PORT19))
+                   { 
                      globalRef = this;
                    }
    void init() override;
@@ -27,7 +29,11 @@ public:
 
 protected:
    using Subsystem::set; 
-private: 
+private:   
+   static double ABSOLUTE_INDEXER_SPEED; 
+
+   vex::motor indexerMotor; 
+
    bool shouldSpinOver(); 
    bool shouldSpinUnder(); 
 

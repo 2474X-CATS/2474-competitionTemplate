@@ -16,78 +16,71 @@ typedef enum {
    LOW_GOAL = 3
 } Goal_Pos; 
 
-class DriveForwardBy : public Command<Drivebase> {   
-    private:   
+class DrivePath : Command<Drivebase> { 
+  
+  private: 
+      Drivebase& drivebaseRef; 
+      vector<double> setpoints;   
+      bool offset;
 
-      Drivebase &driveRef;  
-      pidcontroller* control = nullptr; 
-
-      bool goingForward; 
-      double startingPoint[2]; 
-
-      double getDistTraveled(); 
-
-    public:
-      static CommandInterface *getCommand(double displacement, bool goingForward)
-      {
-         return new DriveForwardBy(*Drivebase::globalRef, displacement, goingForward);
-      }     
-
-      DriveForwardBy(Drivebase &drive, double displacement, bool goingForward) : 
-      Command<Drivebase>(drive), 
-      driveRef(drive),   
-      control(new pidcontroller(drive.getPowerPID(), displacement)),
-      goingForward(goingForward){};  
-
-      ~DriveForwardBy() override = default;
-
-    protected:   
-      void start() override; 
-      void periodic() override;  
-      bool isOver() override; 
-      void end() override;
+      pidcontroller* turnPID = nullptr; 
+      pidcontroller* drivePID = nullptr;  
       
-};  
+      bool initialized;  
+ 
+      bool isCounterClockwise;  
 
-class DriveForwardWhileIntaking : public Command<Drivebase, Intake, Indexer, Hood> {   
-    private:   
+      bool isGoingForward; 
+      double projectedPoint[2];
 
-      Drivebase &driveRef;  
-      Intake &intakeRef; 
-      Hood &hoodRef;  
-      Indexer& indexerRef;
+      int operationsIndex; 
+      int numOfOperations;  
+    
+      void initializeDrive(); 
+      void initializeTurn();  
 
-      pidcontroller* control = nullptr; 
+      bool isDriveOver();  
+      bool isTurnOver();  
 
-      bool goingForward; 
-      double startingPoint[2]; 
+      void drive(); 
+      void turn();   
 
-      double getDistTraveled(); 
+      bool isTurning(); 
+      bool isDriving();
 
-    public:
-      static CommandInterface *getCommand(double displacement, bool goingForward)
-      {
-         return new DriveForwardWhileIntaking(*Drivebase::globalRef, *Intake::globalRef, *Indexer::globalRef, *Hood::globalRef,  displacement, goingForward);
-      }     
+      double getAngularError();  
+      double getDrivingError();  
 
-      DriveForwardWhileIntaking(Drivebase &drive, Intake& intake, Indexer& indexer, Hood& hood, double displacement, bool goingForward) : 
-      Command<Drivebase, Intake, Indexer, Hood>(drive, intake, indexer, hood), 
-      driveRef(drive),    
-      intakeRef(intake),  
-      hoodRef(hood), 
-      indexerRef(indexer),
-      control(new pidcontroller(drive.getPowerPID(), displacement)),
-      goingForward(goingForward){};  
+      void drivePeriodic(); 
+      void turnPeriodic();
 
-      ~DriveForwardWhileIntaking() override = default;
 
-    protected:   
-      void start() override; 
-      void periodic() override;  
-      bool isOver() override; 
-      void end() override;
-      
-};  
+  protected: 
+      void start() override;
+      void periodic() override;
+      bool isOver() override;
+      void end() override;  
+
+  public: 
+
+     static CommandInterface *getCommand(vector<double> setpoints, bool offset)
+     {
+         return new DrivePath(*Drivebase::globalRef, setpoints, offset);
+     }  
+
+     DrivePath(Drivebase& drive, vector<double> setpoints, bool offset) :  
+     Command<Drivebase>(drive), 
+     drivebaseRef(drive), 
+     setpoints(setpoints),  
+     offset(offset),
+     initialized(false), 
+     operationsIndex(0),
+     numOfOperations(setpoints.size())
+     {}; 
+     
+  
+};
+
 
 class DriveForwardForTime : Command<Drivebase> { 
     private:  
@@ -119,7 +112,7 @@ class DriveForwardForTime : Command<Drivebase> {
 
 }; 
 
-
+/*
 class TurnToHeading : public Command<Drivebase> { 
     private:  
       Drivebase &driveRef; 
@@ -151,6 +144,7 @@ class TurnToHeading : public Command<Drivebase> {
       void end() override;
 };
 
+*/
 
 class IntakeToHopper : public Command<Intake, Indexer, Hood> { 
     private:   
@@ -274,14 +268,14 @@ class WaitFor : Command<DummySystem> {
 
 };
 
-CommandInterface* driveForwardByTiles(double tiles); 
-CommandInterface* turnToAngle(double goalHeading);
+//CommandInterface* driveForwardByTiles(double tiles); 
+//CommandInterface* turnToAngle(double goalHeading);
 CommandInterface* scoreOnGoal(Goal_Pos position, double timeDuration);
 CommandInterface* intakeCubes(double timeDuration);
 CommandInterface* holdFor(double timeDuration);
 CommandInterface* extend(); 
 CommandInterface* retract(); 
-CommandInterface* driveAndIntakeForTiles(double tiles);  
+//CommandInterface* driveAndIntakeForTiles(double tiles);  
 CommandInterface* ramForwardFor(double percentage, double timeDuration); 
 
 

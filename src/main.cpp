@@ -7,7 +7,8 @@
 #include "subsystems/hood.h" 
 #include "subsystems/hopper.h" 
 #include "subsystems/intake.h"  
-#include "subsystems/matchloader.h" 
+#include "subsystems/matchloader.h"  
+#include "helpers/location.h"
 #include "commands.h" 
 
 using namespace vex;
@@ -24,14 +25,15 @@ typedef enum
 
 void runTelemetry()
 {
-  robot.runTelemetryThread(true);
+  robot.runTelemetryThread(false);
 }
 
 void freeDrive()
 { 
   thread telemetryThread = thread(runTelemetry); 
   robot.driverControl(false);
-}
+} 
+
 
 /*
 void mirrorMobilize(MirrorMode mode, string filename)
@@ -218,7 +220,7 @@ vector<CommandInterface*> AUTO_SELF_SUFFICIENT_INVERTED(){
     };
 };   
 */  
-
+/*
 vector<CommandInterface*> DEPENDENT(){ 
    return { 
      driveForwardByTiles(1.5)
@@ -282,7 +284,7 @@ vector<CommandInterface*> BUZZER_BEATER(){
     };
 }
 
-  
+*/
 
 
 /*
@@ -331,10 +333,10 @@ int main()
   Hood hood; 
   Hopper hopper;     
   
-  robot.initialize(); 
+  robot.initialize();  
 
-  startCommandMatch( 
-    AUTONOMOUS_PERIOD()
-  );
+
+
+  freeDrive();
 
 }

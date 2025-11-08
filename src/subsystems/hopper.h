@@ -14,7 +14,9 @@ public:
     Hopper() : Subsystem(
                    "hopper",
                    {(EntrySet){"isOn", EntryType::BOOL}} 
-               )
+               ), 
+               hopperMotor(vex::motor(vex::PORT17, false)) 
+               //containerSensor(vex::distance(vex::PORT22))
     { 
         globalRef = this;
     }
@@ -27,7 +29,10 @@ public:
     void dispenseCubes(); 
     void mixHopper();  
 
-private:  
+private:   
+    vex::motor hopperMotor; 
+    //vex::distance containerSensor;  
+
     bool shouldDispenseCubes();  
     bool shouldMixHopper();  
 
