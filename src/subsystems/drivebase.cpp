@@ -185,9 +185,6 @@ void Drivebase::updateTelemetry()
    double hypotenuse = ((leftDriveMotors.velocity(vex::velocityUnits::rpm) - rightDriveMotors.velocity(vex::velocityUnits::rpm)) / 2) / 60 * rpmToDist; // Times 0.02 because that is the time interval
 
    double angleRadians = get<double>("Angle_Degrees_CCW") * (2*M_PI) / 360;
-   
-   //if (driveGyro.pitch(vex::rotationUnits::deg)) 
-   //if (driveGyro.pitch(vex::rotationUnits::deg) >= PITCH_TOLERANCE){  
 
    if (driveGyro.pitch(vex::rotationUnits::deg) > get<double>("Max_Pitch")) 
       set<double>("Max_Pitch", driveGyro.pitch(vex::rotationUnits::deg));  

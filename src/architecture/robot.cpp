@@ -1,8 +1,7 @@
 #include "robot.h"
-#include "subsystem.h"
 #include "telemetry.h"
 #include "command.h"  
-
+#include "subsystem.h" 
 #include "vex.h"
 using namespace vex;
 
@@ -130,26 +129,20 @@ void Robot::registerSystemSubtable()
   );
 };
 
-void Robot::driverControl(bool mirrorControlled)
+void Robot::driverControl()
 { 
  
-  if (!isActive() && mirrorControlled)
-  {
-    mirrorControlled = false;
-  } 
   double timestamp;
   Controller.rumble("---");  
   timestamp = Brain.Timer.time();
-  while (true)
-    { 
-      if (mirrorControlled && !isActive()) 
-        break;
+  while (true){ 
       Subsystem::updateSystems(); 
       timelyWait(timestamp, 20); 
       timestamp = Brain.Timer.time();
   } 
-};
+}; 
 
+/*
 bool Robot::isActive()
 {
   return (inputTracker != nullptr || outputLogger != nullptr || inverseInputTracker != nullptr);
@@ -180,6 +173,7 @@ void Robot::reflect(){
     artificialLog();
 } 
 
+*/
 void Robot::logRegular(){ 
    if (isAttached) {
      rawLog(); 
@@ -190,21 +184,11 @@ void Robot::logRegular(){
 
 
 void Robot::updateSystemSubtable()
-{
-  if (inputTracker != nullptr)
-  {
-    absorb();
-  }
-  else if (outputLogger != nullptr)
-  {
-    reflect(); 
-  }
-  else
-  { 
-    logRegular();
-  }
-};
+{ 
+  logRegular();
+}; 
 
+/*
 void Robot::saveFrame()
 {
   inputTracker->captureFrame(
@@ -268,6 +252,7 @@ void Robot::artificialLog()
   Telemetry::inst.placeValueAt<bool>(data.buttons[10], "system", "Controller/Button_R1");
   Telemetry::inst.placeValueAt<bool>(data.buttons[11], "system", "Controller/Button_R2");
 }
+*/ 
 
 void Robot::rawLog()
 {
@@ -322,8 +307,9 @@ void Robot::runTelemetryThread(bool showGraphics)
     timelyWait(timestamp, 20);
     timestamp = Brain.Timer.time();
   }
-};
+}; 
 
+/*
 void Robot::initializeMirror(MirrorMode mode, string filename)
 {
 
@@ -342,6 +328,7 @@ void Robot::initializeMirror(MirrorMode mode, string filename)
     inverseInputTracker = new AbsorbtiveMirror(filename, true); // Ends in "_FLIPPED"
   }
 } 
+*/ 
 
 void Robot::detachInput(){ 
   isAttached = false;

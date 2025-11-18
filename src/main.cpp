@@ -32,7 +32,7 @@ void runTelemetry()
 void freeDrive()
 { 
   thread telemetryThread = thread(runTelemetry); 
-  robot.driverControl(false);
+  robot.driverControl();
 } 
 
 
@@ -83,7 +83,7 @@ void startCommandMatch(std::vector<CommandInterface*> commandGroup){
   robot.initialize();
   robot.setAutonomousCommand(commandGroup);
   Competition.autonomous([](){robot.autonControl();}); 
-  Competition.drivercontrol([](){robot.driverControl(false);});  
+  Competition.drivercontrol([](){robot.driverControl();});  
   while (!Competition.isEnabled()) 
      this_thread::yield();
   robot.runTelemetryThread(true);
@@ -93,7 +93,7 @@ void driveCommandMatch(std::vector<CommandInterface*> commandGroup){
   robot.setAutonomousCommand(commandGroup); //Registers the autonomous routine
   thread telemThread = thread(runTelemetry); //Start data logging
   robot.autonControl(); //Runs the autonomous command
-  robot.driverControl(false); //Free drive
+  robot.driverControl(); //Free drive
 } 
 
 
