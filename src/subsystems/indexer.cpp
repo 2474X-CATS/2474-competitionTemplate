@@ -34,7 +34,7 @@ void Indexer::periodic()
 }; 
 
 bool Indexer::shouldSpinOver(){ 
-  return getFromInputs<bool>("Controller/Button_R2") || getFromInputs<bool>("Controller/Button_Y");
+  return getFromInputs<bool>("Controller/Button_R2") || getFromInputs<bool>("Controller/Button_Y") || getFromInputs<bool>("Controller/Button_A");
 }
 
 bool Indexer::shouldSpinUnder(){ 

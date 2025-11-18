@@ -202,7 +202,7 @@ void Drivebase::updateTelemetry()
    Brain.Screen.printAt(20,100,"X: %f",get<double>("Pos_X"));  
    Brain.Screen.printAt(20,125,"Y: %f",get<double>("Pos_Y"));  
    Brain.Screen.printAt(20,150,"Angle Heading: %f", get<double>("Angle_Degrees_CCW"));    
-   //Brain.Screen.printAt(20, 175, "Maximum Pitch Val: %f", get<double>("Max_Pitch")); 
+   Brain.Screen.printAt(20, 175, "Maximum Pitch Val: %f", get<double>("Max_Pitch")); 
    
    set<string>("Current_Location","NONE");   
    

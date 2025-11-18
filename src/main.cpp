@@ -8,7 +8,7 @@
 #include "subsystems/hopper.h" 
 #include "subsystems/intake.h"  
 #include "subsystems/matchloader.h"   
-//#include "subsystems/hooks.h"
+#include "subsystems/hooks.h"
 #include "helpers/location.h" 
 #include "commands.h" 
 
@@ -119,7 +119,7 @@ int main()
   Indexer indexer;  
   Hood hood; 
   Hopper hopper;     
-  //Hooks hooks; 
+  Hooks hooks; 
 
   robot.initialize();  
   

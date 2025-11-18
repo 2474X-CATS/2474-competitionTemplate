@@ -54,8 +54,8 @@ bool Hopper::shouldDispenseCubes()
 {
     return getFromInputs<bool>("Controller/Button_R1") ||
            getFromInputs<bool>("Controller/Button_R2") ||
-           getFromInputs<bool>("Controller/Button_RIGHT");
-           //getFromInputs<bool>("Controller/Button_B");
+           getFromInputs<bool>("Controller/Button_RIGHT") ||
+           getFromInputs<bool>("Controller/Button_Y");
 }
 
 bool Hopper::shouldMixHopper()

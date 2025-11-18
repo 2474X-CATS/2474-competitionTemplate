@@ -19,28 +19,26 @@ void Intake::periodic()
     }
     else if (shouldOuttake())
     { 
-        intake();
+        outtake();
     }
     else
     { 
         stop();
     } 
-
-
     
 };
 
 void Intake::updateTelemetry()
 {      
-    return;
-   //Telemetry::inst.placeValueAt<double>(intakeMotor.temperature(), "Motor_Temps","IntakeMotor");
+    Telemetry::inst.placeValueAt<double>(intakeMotor.temperature(), "Motor_Temps","IntakeMotor");
 }
 
 bool Intake::shouldIntake()
 {
     return getFromInputs<bool>("Controller/Button_R1") ||
            getFromInputs<bool>("Controller/Button_R2") || 
-           getFromInputs<bool>("Controller/Button_Y");
+           getFromInputs<bool>("Controller/Button_Y") || 
+           getFromInputs<bool>("Controller/Button_A");
 }
 
 bool Intake::shouldOuttake()
