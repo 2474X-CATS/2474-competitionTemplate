@@ -8,9 +8,11 @@
 
 Drivebase* Drivebase::globalRef = nullptr; 
 
-double Drivebase::ENCODER_WHEEL_RADIUS_MM = 10; // REPLACE WITH ACTUAL VALUES 
-double Drivebase::ENCODER_DIST_FROM_CENTER = 10; // REPLACE WITH ACTUAL VALUES
+
+double Drivebase::ENCODER_WHEEL_RADIUS_MM = 50.8;
+double Drivebase::ENCODER_DIST_FROM_CENTER = 17.653; 
 double Drivebase::DRIVE_WHEEL_RADIUS_MM = 76.2; 
+
 
 void Drivebase::declareLocations(){    
    locations[0] = new Location( 
