@@ -9,7 +9,6 @@ void Matchloader::init() {
     set<bool>("isOn", true); 
 }
 
-
 void Matchloader::updateTelemetry(){
     return;
 }
@@ -27,7 +26,7 @@ bool Matchloader::shouldDeploy(){
 } 
 
 void Matchloader::deploy(){ 
-    matchloaderPiston.open();
+    matchloaderPiston.open(); 
 } 
 
 void Matchloader::retract(){ 
