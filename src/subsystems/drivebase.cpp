@@ -7,8 +7,11 @@
 
 Drivebase* Drivebase::globalRef = nullptr; 
 
+
+double Drivebase::ENCODER_WHEEL_RADIUS_MM = 50.8;
+double Drivebase::ENCODER_DIST_FROM_CENTER = 17.653; 
 double Drivebase::DRIVE_WHEEL_RADIUS_MM = 76.2; 
-double Drivebase::PITCH_TOLERANCE = 10; 
+
 
 void Drivebase::declareLocations(){    
    locations[0] = new Location( 
@@ -134,19 +137,12 @@ void Drivebase::declareLocations(){
 void Drivebase::init()
 {   
 
-   //driveGyro.setTurnType(vex::turnType::left); 
+   encoderLinear.setPosition(0, vex::rotationUnits::rev); 
+   encoderAngular.setPosition(0, vex::rotationUnits::rev);  
+   encoderLinear.setReversed(true);  
 
    leftDriveMotors.setStopping(vex::brakeType::brake);
    rightDriveMotors.setStopping(vex::brakeType::brake);
-   
-   //driveGyro.setTurnType(vex::turnType::left);
-   driveGyro.calibrate();
-   while (driveGyro.isCalibrating())
-   {
-      vex::this_thread::yield();
-   }
-
-   driveGyro.setHeading(0, vex::rotationUnits::deg);
 
    powerPID.P = 0.75;
    powerPID.I = 0.015;
@@ -161,10 +157,10 @@ void Drivebase::init()
    turnPID.errorTolerance = 0.5;
 
    set<double>("Pos_X", startX + ROBOT_WIDTH_MM / 2);
-   set<double>("Pos_Y", startY + ROBOT_LENGTH_MM / 2); 
-   set<double>("Velocity_mm/20ms", 0);
+   set<double>("Pos_Y", startY + ROBOT_LENGTH_MM / 2);  
+   set<double>("Angle_Degrees_CCW", 90);
    set<string>("Current_Location", "NONE");  
-   set<double>("Max_Pitch", 0); 
+  
 
    declareLocations();
 };
@@ -177,28 +173,29 @@ void Drivebase::periodic()
 void Drivebase::updateTelemetry()
 {
    double x = get<double>("Pos_X");
-   double y = get<double>("Pos_Y");  
-   set<double>("Angle_Degrees_CCW", fmod(90 + -driveGyro.heading() + 360, 360)); 
+   double y = get<double>("Pos_Y");   
+   double currentAngle = get<double>("Angle_Degrees_CCW");   
+   
+   double rpmToDist = (2 * M_PI * ENCODER_WHEEL_RADIUS_MM) / 3000; 
 
-   double rpmToDist = (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) * 0.02;
-   double hypotenuse = ((leftDriveMotors.velocity(vex::velocityUnits::rpm) - rightDriveMotors.velocity(vex::velocityUnits::rpm)) / 2) / 60 * rpmToDist; // Times 0.02 because that is the time interval
+   currentAngle += (encoderAngular.velocity(vex::velocityUnits::rpm) * rpmToDist) / (2 * M_PI * ENCODER_DIST_FROM_CENTER) * 360; 
+   
+   if (currentAngle < 0) 
+      currentAngle = 360 - currentAngle;   
+   else if (currentAngle >= 360) 
+      currentAngle = currentAngle - 360;  
+   
+   set<double>("Angle_Degrees_CCW", currentAngle);
+
+   double hypotenuse = (encoderLinear.velocity(vex::velocityUnits::rpm) * rpmToDist); 
 
    double angleRadians = get<double>("Angle_Degrees_CCW") * (2*M_PI) / 360;
-
-   if (driveGyro.pitch(vex::rotationUnits::deg) > get<double>("Max_Pitch")) 
-      set<double>("Max_Pitch", driveGyro.pitch(vex::rotationUnits::deg));  
-   x += (hypotenuse * cos(angleRadians));
-   y += (hypotenuse * sin(angleRadians));
    
-
+   x += (hypotenuse * cos(angleRadians));
+   y += (hypotenuse * sin(angleRadians)); 
+   
    set<double>("Pos_X", x);
    set<double>("Pos_Y", y);     
-   set<double>("Velocity_mm/20ms", hypotenuse);  
-   
-   Brain.Screen.printAt(20,100,"X: %f",get<double>("Pos_X"));  
-   Brain.Screen.printAt(20,125,"Y: %f",get<double>("Pos_Y"));  
-   Brain.Screen.printAt(20,150,"Angle Heading: %f", get<double>("Angle_Degrees_CCW"));    
-   Brain.Screen.printAt(20, 175, "Maximum Pitch Val: %f", get<double>("Max_Pitch")); 
    
    set<string>("Current_Location","NONE");   
    
@@ -212,18 +209,22 @@ void Drivebase::updateTelemetry()
       } else { 
          continue; 
       }
-   }   
-
-   Brain.Screen.printAt(20,200, get<string>("Current_Location").c_str());
+   }
 
    Telemetry::inst.placeValueAt<double>(driveFrontLeft.temperature(), "Motor_Temps","DriveFrontLeft"); 
    Telemetry::inst.placeValueAt<double>(driveFrontRight.temperature(), "Motor_Temps","DriveFrontRight"); 
    Telemetry::inst.placeValueAt<double>(driveMidLeft.temperature(), "Motor_Temps","DriveMidLeft"); 
    Telemetry::inst.placeValueAt<double>(driveMidRight.temperature(), "Motor_Temps","DriveMidRight"); 
    Telemetry::inst.placeValueAt<double>(driveBackLeft.temperature(), "Motor_Temps","DriveBackLeft"); 
-   Telemetry::inst.placeValueAt<double>(driveBackRight.temperature(), "Motor_Temps","DriveBackRight"); 
-  
+   Telemetry::inst.placeValueAt<double>(driveBackRight.temperature(), "Motor_Temps","DriveBackRight");
    
+   //--------------------------------------------------------- 
+
+   Brain.Screen.printAt(20,100,"X: %f",get<double>("Pos_X"));  
+   Brain.Screen.printAt(20,125,"Y: %f",get<double>("Pos_Y"));  
+   Brain.Screen.printAt(20,150,"Angle Heading: %f", get<double>("Angle_Degrees_CCW"));    
+   Brain.Screen.printAt(20,200, get<string>("Current_Location").c_str());
+
    
 }; 
 
