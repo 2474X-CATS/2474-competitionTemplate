@@ -84,13 +84,14 @@ void RobotState::initializeState(){
 
 void RobotState::updateRegular(){ 
    Telemetry::inst.placeValueAt<bool>(Controller.ButtonY.pressing(), "robot_state", "intaking_to_hopper");  
-   Telemetry::inst.placeValueAt<bool>(Controller.ButtonR1.pressing(), "robot_state", "scoring_high");
-   Telemetry::inst.placeValueAt<bool>(Controller.ButtonR2.pressing(), "robot_state", "scoring_mid");
+   Telemetry::inst.placeValueAt<bool>(Controller.ButtonR2.pressing(), "robot_state", "scoring_high");
+   Telemetry::inst.placeValueAt<bool>(Controller.ButtonR1.pressing(), "robot_state", "scoring_mid");
    Telemetry::inst.placeValueAt<bool>(Controller.ButtonB.pressing(), "robot_state", "scoring_low");
    Telemetry::inst.placeValueAt<bool>(Controller.ButtonL2.pressing(), "robot_state", "matchloader_out");
    Telemetry::inst.placeValueAt<bool>(Controller.ButtonL1.pressing(), "robot_state", "toggling_hood");
    Telemetry::inst.placeValueAt<bool>(Controller.ButtonX.pressing(), "robot_state", "toggling_descore");
 }
+
 
 void RobotState::updateStopped(){ 
    Telemetry::inst.placeValueAt<bool>(false, "robot_state", "intaking_to_hopper");  
