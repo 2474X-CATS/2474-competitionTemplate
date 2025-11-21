@@ -41,7 +41,7 @@ private:
   array<Location*, 14> locations; 
 
   void declareLocations(); 
-  //Location* currentLocation = nullptr; 
+ 
 
 protected:
   using Subsystem::set;

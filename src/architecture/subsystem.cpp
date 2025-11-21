@@ -86,7 +86,7 @@ void RobotState::updateRegular(){
    Telemetry::inst.placeValueAt<bool>(Controller.ButtonY.pressing(), "robot_state", "intaking_to_hopper");  
    Telemetry::inst.placeValueAt<bool>(Controller.ButtonR2.pressing(), "robot_state", "scoring_high");
    Telemetry::inst.placeValueAt<bool>(Controller.ButtonR1.pressing(), "robot_state", "scoring_mid");
-   Telemetry::inst.placeValueAt<bool>(Controller.ButtonB.pressing(), "robot_state", "scoring_low");
+   Telemetry::inst.placeValueAt<bool>(Controller.ButtonRight.pressing(), "robot_state", "scoring_low");
    Telemetry::inst.placeValueAt<bool>(Controller.ButtonL2.pressing(), "robot_state", "matchloader_out");
    Telemetry::inst.placeValueAt<bool>(Controller.ButtonL1.pressing(), "robot_state", "toggling_hood");
    Telemetry::inst.placeValueAt<bool>(Controller.ButtonX.pressing(), "robot_state", "toggling_descore");
@@ -110,7 +110,7 @@ bool RobotState::getStateOf(string key){
 
 
 int RobotState::getAxisState(AxisType axisType){ 
-   int axisVal; 
+   int axisVal = 0; 
    if (axisesEnabled){ 
     switch (axisType){ 
       case LEFT_HORIZONTAL:   
