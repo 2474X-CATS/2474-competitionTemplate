@@ -23,9 +23,6 @@ public:
    void updateTelemetry() override; 
    void stop() override; 
 
-   void spinOver(); 
-   void spinUnder();
-
 protected:
    using Subsystem::set; 
 private:   
@@ -34,7 +31,10 @@ private:
    vex::motor indexerMotor; 
 
    bool shouldSpinOver(); 
-   bool shouldSpinUnder(); 
+   bool shouldSpinUnder();  
+
+   void spinOver(); 
+   void spinUnder();
 
 };
 

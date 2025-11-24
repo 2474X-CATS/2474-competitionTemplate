@@ -23,17 +23,17 @@ public:
     void init() override;           
     void periodic() override;       
     void updateTelemetry() override; 
-    void stop() override;
-
-    void dispenseCubes(); 
-    void mixHopper();  
+    void stop() override;  
 
 private:   
     vex::motor hopperMotor; 
     //vex::distance containerSensor;  
 
     bool shouldDispenseCubes();  
-    bool shouldMixHopper();  
+    bool shouldMixHopper();   
+
+    void dispenseCubes(); 
+    void mixHopper();
 
     // this figures out what the driver wants the hopper to do
    

@@ -74,6 +74,15 @@ int main()
   
   robot.initialize();  
   
-  freeDrive(); 
+  
+  driveCommandMatch( 
+     {   
+       extend(),
+       holdFor(5000),
+     }
+  );  
+  
+ //freeDrive();
+ 
 
 }

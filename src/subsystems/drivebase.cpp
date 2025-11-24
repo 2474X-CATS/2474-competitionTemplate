@@ -8,8 +8,8 @@
 Drivebase* Drivebase::globalRef = nullptr; 
 
 
-double Drivebase::ENCODER_WHEEL_RADIUS_MM = 50.8;
-double Drivebase::ENCODER_DIST_FROM_CENTER = 17.653; 
+double Drivebase::ENCODER_WHEEL_RADIUS_MM = 25.4; 
+double Drivebase::ENCODER_DIST_FROM_CENTER = 17.654 * 2; //17.665
 double Drivebase::DRIVE_WHEEL_RADIUS_MM = 76.2; 
 
 
@@ -144,15 +144,15 @@ void Drivebase::init()
    leftDriveMotors.setStopping(vex::brakeType::brake);
    rightDriveMotors.setStopping(vex::brakeType::brake);
 
-   powerPID.P = 0.75;
-   powerPID.I = 0.015;
-   powerPID.D = 0.25; 
-   powerPID.iLimit = 1500;
+   powerPID.P = 1;
+   powerPID.I = 0.1;
+   powerPID.D = 0.01; 
+   powerPID.iLimit = 1000;
    powerPID.errorTolerance = 1;
    //------------------------------
-   turnPID.P = 0.75;
-   turnPID.I = 0.1;
-   turnPID.D = 0.05; 
+   turnPID.P = 1.4;
+   turnPID.I = 0.05;
+   turnPID.D = 0; 
    turnPID.iLimit = 180;
    turnPID.errorTolerance = 0.5;
 
@@ -176,18 +176,30 @@ void Drivebase::updateTelemetry()
    double y = get<double>("Pos_Y");   
    double currentAngle = get<double>("Angle_Degrees_CCW");   
    
-   double rpmToDist = (2 * M_PI * ENCODER_WHEEL_RADIUS_MM) / 3000; 
+   double rpmToDist = (2 * M_PI * ENCODER_WHEEL_RADIUS_MM); 
+   
+    
+   double angularVelocity; 
+   
+   angularVelocity = -(rightDriveMotors.velocity(vex::velocityUnits::rpm) + leftDriveMotors.velocity(vex::velocityUnits::rpm)) / 2 / 60 / 50; 
+   angularVelocity *= (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI); 
+   angularVelocity /= (ROBOT_WIDTH_MM * M_PI); 
+   angularVelocity *= 360;
+   
 
-   currentAngle += (encoderAngular.velocity(vex::velocityUnits::rpm) * rpmToDist) / (2 * M_PI * ENCODER_DIST_FROM_CENTER) * 360; 
+   //angularVelocity = -(((encoderAngular.velocity(vex::velocityUnits::rpm) / 60 / 50) * rpmToDist) / (M_PI * ENCODER_DIST_FROM_CENTER)) * (180);
+
+   currentAngle += angularVelocity;
    
-   if (currentAngle < 0) 
-      currentAngle = 360 - currentAngle;   
-   else if (currentAngle >= 360) 
-      currentAngle = currentAngle - 360;  
-   
+   if (currentAngle > 360){
+     currentAngle = currentAngle - 360;   
+   } else if (currentAngle < 0){ 
+     currentAngle = 360 + currentAngle; 
+   }
+
    set<double>("Angle_Degrees_CCW", currentAngle);
 
-   double hypotenuse = (encoderLinear.velocity(vex::velocityUnits::rpm) * rpmToDist); 
+   double hypotenuse = (encoderLinear.velocity(vex::velocityUnits::rpm) * rpmToDist) / 3000; 
 
    double angleRadians = get<double>("Angle_Degrees_CCW") * (2*M_PI) / 360;
    
@@ -221,9 +233,11 @@ void Drivebase::updateTelemetry()
    //--------------------------------------------------------- 
 
    Brain.Screen.printAt(20,100,"X: %f",get<double>("Pos_X"));  
-   Brain.Screen.printAt(20,125,"Y: %f",get<double>("Pos_Y"));  
+   Brain.Screen.printAt(20,125,"Y: %f",get<double>("Pos_Y"));   
    Brain.Screen.printAt(20,150,"Angle Heading: %f", get<double>("Angle_Degrees_CCW"));    
-   Brain.Screen.printAt(20,200, get<string>("Current_Location").c_str());
+   //Brain.Screen.printAt(20,200, get<string>("Current_Location").c_str()); 
+   
+   
 
    
 }; 

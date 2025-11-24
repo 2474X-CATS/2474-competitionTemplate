@@ -25,13 +25,14 @@ public:
     void updateTelemetry() override; 
     void stop() override;  
 
-    void open(); 
-    void close();
-
 protected: 
     using Subsystem::set;
-private:   
+private:    
+    
     vex::pneumatics hoodPiston; 
+    
+    void open(); 
+    void close(); 
 
     bool holding = false;  
 

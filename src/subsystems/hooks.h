@@ -31,7 +31,6 @@ protected:
 private:   
     vex::pneumatics hookTank;  
    
-
     bool toggled = false;  
     bool holding = false;
 

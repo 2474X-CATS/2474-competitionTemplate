@@ -43,7 +43,8 @@ typedef enum {
 class DrivePath : public Command<Drivebase> { 
   
   protected: 
-      Drivebase& drivebaseRef; 
+      Drivebase& drivebaseRef;  
+
       vector<double> setpoints;   
       bool turningFirst;
 
@@ -282,7 +283,8 @@ class ScoreOnGoal : public Command<Intake, Indexer, Hood, Hopper> {
 class DeployMatchloader : Command<Matchloader> { 
     private:  
       Matchloader& matchLoaderRef;
-      bool isOut;
+      bool isOut; 
+      bool ran = false;
     protected: 
       void start() override;
       void periodic() override;
@@ -333,7 +335,11 @@ class WaitFor : Command<DummySystem> {
 //CommandInterface* driveForwardByTiles(double tiles); 
 //CommandInterface* turnToAngle(double goalHeading); 
 CommandInterface* alignWithLocation(int locationIndex, double projectedDist, PathType pathType); 
-CommandInterface* driveToPoint(double setX, double setY, PathType pathType);
+CommandInterface* driveToPoint(double setX, double setY, PathType pathType);  
+
+CommandInterface* driveLinear(double distance); 
+CommandInterface* turnToAngle(double angle);
+
 CommandInterface* scoreOnGoal(Goal_Pos position, double timeDuration);
 CommandInterface* intakeCubes(double timeDuration);
 CommandInterface* holdFor(double timeDuration);

@@ -17,9 +17,6 @@ double ROBOT_LENGTH_MM = 355.6;//mm
 
 double TILE_SIZE_MM = (3.6576/6) * 1000; //mm
 
-
-
-
 void vexcodeInit() {
    
 }; 

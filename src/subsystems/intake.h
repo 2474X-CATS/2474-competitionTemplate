@@ -24,9 +24,6 @@ public:
     void updateTelemetry() override;
     void stop() override; 
 
-    void intake(); 
-    void outtake();  
-
 private:   
     static double ABSOLUTE_INTAKE_SPEED; 
     vex::motor intakeMotor;  
@@ -34,7 +31,10 @@ private:
     //vex::distance channelSensor; 
 
     bool shouldIntake(); 
-    bool shouldOuttake();   
+    bool shouldOuttake();  
+    
+    void intake(); 
+    void outtake();
     
 };
 

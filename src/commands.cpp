@@ -1,32 +1,7 @@
 #include "commands.h" 
 
 ////////////////////////////////////////////////////////////  
-/*
-void DriveForwardBy::start(){   
 
-    driveRef.setSpeedFactor(1);
-    startingPoint[0] = driveRef.get<double>("Pos_X"); 
-    startingPoint[1] = driveRef.get<double>("Pos_Y");  
-    control->setLastTimestamp(Brain.Timer.time());   
-};
-void DriveForwardBy::periodic(){ 
-    double output = control->calculate(getDistTraveled(), Brain.Timer.time());  
-    if (!goingForward) 
-        output = -output;
-    driveRef.manualDriveForward(output);
-}; 
-bool DriveForwardBy::isOver(){ 
-    return control->atSetpoint(getDistTraveled());
-};
-void DriveForwardBy::end(){ 
-    driveRef.stop();  
-    driveRef.setSpeedFactor(0.85); 
-}; 
-
-double DriveForwardBy::getDistTraveled(){ 
-    return hypot(driveRef.get<double>("Pos_X") - startingPoint[0], driveRef.get<double>("Pos_Y") - startingPoint[1]); 
-}; 
-*/  
 void DrivePath::start(){ 
     return; 
 }  
@@ -131,11 +106,6 @@ void DrivePath::initializeTurn(){
        normalDist = 360 - normalDist;  
     }
 
-    Brain.Screen.print(normalDist); 
-    Brain.Screen.newLine(); 
-    Brain.Screen.print(isCounterClockwise ? "counter-clockwise" : "clockwise");  
-    Brain.Screen.newLine();  
-
     turnPID = new pidcontroller(drivebaseRef.getTurningPID(), 0);    
     turnPID->setLastTimestamp(Brain.Timer.time());  
 
@@ -167,23 +137,34 @@ void DriveToSetpoint::start(){
 
     double startingX = drivebaseRef.get<double>("Pos_X"); 
     double startingY = drivebaseRef.get<double>("Pos_Y");   
+    
+    double currentAngle = drivebaseRef.get<double>("Angle_Degrees_CCW"); 
 
     double overallDist = hypot(startingX - setpointX, startingY - setpointY); 
     double overallAngle = fmod((atan2(startingY - setpointY, startingX - setpointX) / M_PI * 180 + 180), 360); 
+    
+    double angleDiff = fmod(overallAngle - currentAngle + 360, 360); 
 
     double xDist = setpointX - startingX;  
     double yDist = setpointY - startingY; 
     
     switch (pathType){ 
-        case EUCLIDEAN:  
-          setpoints.push_back(overallAngle);  
-          setpoints.push_back(overallDist); 
+        case EUCLIDEAN:       
+          if (angleDiff <= 180){
+           setpoints.push_back(overallAngle);  
+           setpoints.push_back(overallDist);   
+          } else { 
+           setpoints.push_back(fmod(overallAngle + 180, 360));  
+           setpoints.push_back(-overallDist);
+          }
           break;  
-        case MANHATTAN_XY: 
+        case MANHATTAN_XY:  
+
           setpoints.push_back((xDist >= 0 ? 0 : 180)); 
           setpoints.push_back(fabs(xDist)); 
           setpoints.push_back((yDist >= 0 ? 90 : 270)); 
-          setpoints.push_back(fabs(yDist)); 
+          setpoints.push_back(fabs(yDist));  
+
           break;
         case MANHATTAN_YX:  
           setpoints.push_back((yDist >= 0 ? 90 : 270)); 
@@ -250,24 +231,23 @@ void DriveForwardForTime::end(){
     drivebaseRef.setSpeedFactor(0.85);
 }
 
-void IntakeToHopper::start(){ 
-   hoodRef.close(); 
+void IntakeToHopper::start(){  
+   RobotState::manuallyModifyState("intaking_to_hopper", true);
    startingTime = Brain.Timer.time(vex::msec); 
 };  
 
 void IntakeToHopper::periodic(){ 
-  intakeRef.intake(); 
-  indexerRef.spinOver();
+   hoodRef.periodic(); 
+   indexerRef.periodic(); 
+   intakeRef.periodic(); 
 };  
 
 bool IntakeToHopper::isOver(){ 
     return Brain.Timer.time(vex::msec) - startingTime >= timeDuration;
 } 
 
-void IntakeToHopper::end(){ 
-    intakeRef.stop(); 
-    indexerRef.stop(); 
-    hoodRef.stop();
+void IntakeToHopper::end(){    
+    RobotState::manuallyModifyState("intaking_to_hopper", false); 
 } 
 
 
@@ -276,58 +256,73 @@ void IntakeToHopper::end(){
 void ScoreOnGoal::start(){ 
    //Top: 1 
    //Mid: 2 
-   //Low: 3 
-   if (goal == 1)  
-     hoodRef.open();  
-   hopperRef.dispenseCubes();
+   //Low: 3  
+   switch (goal){ 
+      case 1: 
+       RobotState::manuallyModifyState("scoring_high", true);  
+       break; 
+      case 2: 
+       RobotState::manuallyModifyState("scoring_mid", true); 
+       break; 
+      case 3: 
+       RobotState::manuallyModifyState("scoring_low", true);  
+       break;    
+      default: 
+       break;
+   } 
    startingTime = Brain.Timer.time(); 
-} 
+};  
 
-void ScoreOnGoal::periodic(){   
-    hopperRef.dispenseCubes(); 
-    if (goal != 3){ 
-        intakeRef.intake(); 
-        if (goal == 1) 
-            indexerRef.spinOver();
-        else { 
-            indexerRef.spinUnder();
-        }
-    } else { 
-        intakeRef.outtake();
-    } 
+void ScoreOnGoal::periodic(){    
+    hoodRef.periodic(); 
+    hopperRef.periodic(); 
+    indexerRef.periodic(); 
+    intakeRef.periodic(); 
 } 
 
 bool ScoreOnGoal::isOver(){ 
     return Brain.Timer.time() - startingTime >= timeDuration; 
 } 
 
-void ScoreOnGoal::end(){ 
-    intakeRef.stop(); 
-    indexerRef.stop(); 
-    hopperRef.stop();  
+void ScoreOnGoal::end(){   
+    switch (goal){ 
+      case 1: 
+       RobotState::manuallyModifyState("scoring_high", false);  
+       break; 
+      case 2: 
+       RobotState::manuallyModifyState("scoring_mid", false); 
+       break; 
+      case 3: 
+       RobotState::manuallyModifyState("scoring_low", false);  
+       break;    
+      default: 
+       break;
+   }
+    
 } 
 
 
 
 ////////////////////////////////////////////////////////////   
 
-void DeployMatchloader::start(){  
-    if (isOut) 
-       matchLoaderRef.deploy();
+void DeployMatchloader::start(){   
+    if (isOut)  
+      RobotState::manuallyModifyState("matchloader_out", true);
     else { 
-       matchLoaderRef.retract();
+      RobotState::manuallyModifyState("matchloader_out", false); 
     }
 } 
 
-void DeployMatchloader::periodic(){
-    return;
+void DeployMatchloader::periodic(){ 
+    matchLoaderRef.periodic(); 
+    ran = true;
 } 
 
 bool DeployMatchloader::isOver(){ 
-    return true; 
+    return ran; 
 }
 
-void DeployMatchloader::end(){ 
+void DeployMatchloader::end(){  
     return;
 }   
 
@@ -350,21 +345,9 @@ void WaitFor::end(){
 } 
 
 
-
 ////////////////////////////////////////////////////////////  
 
 
-
-/*
-CommandInterface* driveForwardByTiles(double tiles){ 
-    return DriveForwardBy::getCommand(fabs(tiles * TILE_SIZE_MM), tiles > 0);
-};  
-*/
-/*
-CommandInterface* turnToAngle(double goalHeading){ 
-    return TurnToHeading::getCommand(goalHeading);
-}; 
-*/
 CommandInterface* scoreOnGoal(Goal_Pos position, double timeDuration){ 
     return ScoreOnGoal::getCommand(static_cast<int>(position), timeDuration);
 }; 
@@ -383,7 +366,15 @@ CommandInterface* extend(){
 
 CommandInterface* retract(){ 
     return DeployMatchloader::getCommand(false);
-};  
+};   
+
+CommandInterface* driveLinear(double distance){ 
+    return DrivePath::getCommand({distance}, false);
+} 
+
+CommandInterface* turnToAngle(double angle){ 
+    return DrivePath::getCommand({angle}, true); 
+}
 /*
 CommandInterface* driveAndIntakeForTiles(double tiles){ 
     return DriveForwardWhileIntaking::getCommand(fabs(tiles * TILE_SIZE_MM), tiles > 0); 

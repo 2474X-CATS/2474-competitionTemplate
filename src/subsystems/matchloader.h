@@ -23,14 +23,15 @@ public:
     void init() override;
     void periodic() override;
     void updateTelemetry() override;
-    void stop() override;  
-
-    void deploy(); 
-    void retract();
+    void stop() override;   
+    
 protected:
     using Subsystem::set; 
 private:  
-    vex::pneumatics matchloaderPiston;  
+    vex::pneumatics matchloaderPiston;   
+
+    void deploy(); 
+    void retract();
 };
 
 #endif
