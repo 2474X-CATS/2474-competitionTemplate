@@ -1,48 +1,62 @@
 #ifndef __TRAP_MOTION_H__ 
 #define __TRAP_MOTION_H__ 
 
-
 typedef struct {  
+   double position; 
+   double velocity; 
+   double acceleration; 
+} TrapezoidalSetpoint;  
 
-    double maxVelocity; 
-    double maxAcceleration; 
-    
-} TrapezoidConstants; 
+typedef struct { 
+  double maxVelocity; 
+  double maxAcceleration; 
+} TrapezoidConstants;
 
 class TrapezoidalMotionProfile {  
-    private:  
-      double setpoint;    
+   
+    private: 
+      double accelDist; 
+      double accelTime; 
+
+      double cruiseDist; 
+      double cruiseTime; 
+
+      double decelDist; 
+      double decelTime; 
+      
+      double maxVelocity; 
+      double maxAcceleration; 
+ 
+      double setpoint; 
 
       double startingTimestamp;  
 
-      double maxVelocity; 
-      double maxAcceleration;
+      double toleranceVel = 0.0; 
+      double tolerancePos = 0.0; 
 
-      double accelTime; 
-      double decelTime;  
-      double cruiseTime;
+      double calculatePosition(double time); 
+      double calculateVelocity(double time); 
+      double calculateAcceleration(double time);  
 
-      double accelDist; 
-      double decelDist; 
-      double cruiseDist;
+      void init(); 
 
-      void init();  
-
-    public:  
+    public: 
 
       TrapezoidalMotionProfile(TrapezoidConstants constants, double setpoint, double startingTime): 
-      startingTimestamp(startingTime), 
-      setpoint(setpoint),
       maxVelocity(constants.maxVelocity), 
-      maxAcceleration(constants.maxAcceleration)
+      maxAcceleration(constants.maxAcceleration), 
+      setpoint(setpoint), 
+      startingTimestamp(startingTime)
       { 
         init();
       };   
       
-      double calculateVelocityT(double time);  
-  
-      double calculateVelocityD(double dist);  
-      
+      TrapezoidalSetpoint generateSetpoint(double time);
+
+      void setPositionTolerance(double posTol); 
+      void setVelocityTolerance(double velTol);  
+
+      bool atGoal(double currentPosition, double currentVelocity); 
 
 };
 

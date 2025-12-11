@@ -27,13 +27,8 @@ private:
     static double ABSOLUTE_INTAKE_SPEED;
     vex::motor intakeMotor;
 
-    // vex::distance channelSensor;
+    void spinAtPercent(double percent); 
 
-    bool shouldIntake();
-    bool shouldOuttake();
-
-    void intake();
-    void outtake();
 };
 
 #endif

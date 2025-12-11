@@ -5,71 +5,52 @@
 Hopper *Hopper::globalRef = nullptr;
 
 double Hopper::ABSOLUTE_HOPPER_SPEED = 300;
+double Hopper::DISTANCE_THRESHOLD = 10; 
 
 void Hopper::init()
-{
+{ 
     hopperMotor.setStopping(vex::brakeType::brake);      
 }
 
 
 void Hopper::updateTelemetry()
 {
-    set<bool>("detects_jam", fabs(getExpectedVelocity() - hopperMotor.velocity(vex::velocityUnits::rpm)) > 1);
+    set<bool>("detects_jam", fabs(getExpectedVelocity() - hopperMotor.velocity(vex::velocityUnits::rpm)) > 1); 
+    set<bool>("primed", distanceSensor.objectDistance(vex::distanceUnits::cm) < DISTANCE_THRESHOLD);
 }
 
 void Hopper::periodic()
 {
 
-    if (shouldDispenseCubes()) // Checks if you should outtake cubes from the hopper
+    if (RobotState::getStateOf("robot_is_loading") || RobotState::getStateOf("scoring_high") || RobotState::getStateOf("scoring_mid") || RobotState::getStateOf("scoring_low")) // Checks if you should outtake cubes from the hopper
     {
-        dispenseCubes();
+        spinAtPercent(-1);
     }
-    else if (shouldMixHopper())
+    else if (RobotState::getStateOf("mixing_hopper"))
     { // Checks if you should run hopper motor away from outtake
-        mixHopper();
+        spinAtPercent(1); 
     }
     else
-    {
-        stop(); // Checks if you should stop the hopper motor
+    { 
+        if (!get<bool>("primed")){ 
+          spinAtPercent(-0.05);
+        } else { 
+          stop();
+        }
     }
-}
-
-void Hopper::dispenseCubes()
-{
-    hopperMotor.setVelocity(ABSOLUTE_HOPPER_SPEED, vex::velocityUnits::rpm);
-    hopperMotor.spin(vex::directionType::fwd);
-}
-
-void Hopper::mixHopper()
-{
-    hopperMotor.setVelocity(-ABSOLUTE_HOPPER_SPEED, vex::velocityUnits::rpm);
-    hopperMotor.spin(vex::directionType::fwd);
 }
 
 void Hopper::stop()
 {
-    hopperMotor.setVelocity(0, vex::percentUnits::pct);
-    hopperMotor.spin(vex::directionType::fwd);
+    spinAtPercent(0);
 }
 
-bool Hopper::shouldDispenseCubes()
-{
-    return RobotState::getStateOf("scoring_high") || RobotState::getStateOf("scoring_mid") || RobotState::getStateOf("scoring_low");
-}
+void Hopper::spinAtPercent(double percentage){ 
+   hopperMotor.setVelocity(ABSOLUTE_HOPPER_SPEED * percentage, vex::velocityUnits::rpm); 
+   hopperMotor.spin(vex::directionType::fwd);
+}; 
 
-bool Hopper::shouldMixHopper()
-{
-    return RobotState::getStateOf("mixing_hopper");
-}
 
 double Hopper::getExpectedVelocity(){ 
-    double output; 
-    if (shouldDispenseCubes()) 
-      output = ABSOLUTE_HOPPER_SPEED; 
-    else if (shouldMixHopper()) 
-      output = -ABSOLUTE_HOPPER_SPEED; 
-    else { 
-      output = 0;
-    } 
-    return output; 
+    return 0;
 };

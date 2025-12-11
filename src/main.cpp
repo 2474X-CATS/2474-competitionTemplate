@@ -129,25 +129,10 @@ int main()
 
   robot.initialize();  
 
-  RobotState::manuallyModifyState("is_color_Blue", true);
+  RobotState::manuallyModifyState("is_team_color_blue", true);
+  RobotState::manuallyModifyState("color_sensitive", true); 
 
-  /*
-  driveCommandMatch( 
-     { 
-      AlignWithLocation(Zones::NAT_ML_LEFT, TILE_SIZE_MM , PathType::MANHATTAN_XY, false),  
-      EnableMatchloader(true),
-      RamForward(0.25, 1000, true),   
-      IntakeCubes(1500),
-      RamForward(-0.25, 750, false),
-      EnableMatchloader(false),
-      FaceLocation(Zones::NAT_HIGH_LEFT),    
-      GetWithinDistOfSetpoint(Zones::NAT_HIGH_LEFT, 295), 
-      Score(Goal_Pos::HIGH_GOAL, 2000)
-     }
-  ); 
-  */ 
- driveCommandMatch( 
-  shortRun()
- );
+  freeDrive();
+  
 
 }

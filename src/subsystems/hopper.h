@@ -14,9 +14,11 @@ public:
     Hopper() : Subsystem(
                    "hopper",
                    {  
-                    (EntrySet){"detects_jam", EntryType::BOOL}
+                    (EntrySet){"detects_jam", EntryType::BOOL}, 
+                    (EntrySet){"primed", EntryType::BOOL}
                    }),
-               hopperMotor(vex::motor(vex::PORT18, false))
+               hopperMotor(vex::motor(vex::PORT18, false)), 
+               distanceSensor(vex::distance(vex::PORT5))
     {
         globalRef = this;
     }
@@ -26,16 +28,15 @@ public:
     void updateTelemetry() override;
     void stop() override;
 
-private:
+private: 
+
     vex::motor hopperMotor;
-    
+    vex::distance distanceSensor; 
+
     static double ABSOLUTE_HOPPER_SPEED;
+    static double DISTANCE_THRESHOLD;
 
-    bool shouldDispenseCubes();
-    bool shouldMixHopper();
-
-    void dispenseCubes();
-    void mixHopper(); 
+    void spinAtPercent(double percentage); 
 
     double getExpectedVelocity(); 
     

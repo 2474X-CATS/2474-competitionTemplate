@@ -115,7 +115,8 @@ private:
 
 public:
   static void manuallyModifyState(string key, bool val);
-  static bool getStateOf(string key); 
+  static bool getStateOf(string key);  
+  static bool getExternalState(string subtable, string key);
   static void setMode(ControlType control);
   static int getAxisState(AxisType axisType);
 

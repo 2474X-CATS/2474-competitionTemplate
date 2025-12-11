@@ -10,7 +10,7 @@ void Hooks::init()
 
 void Hooks::periodic()
 {
-  if (toggleSignal())
+  if (RobotState::getStateOf("toggling_descore"))
     holding = true;
   else
   {
@@ -29,11 +29,6 @@ void Hooks::periodic()
     hookTank.close();
   }
 };
-
-bool Hooks::toggleSignal()
-{
-  return RobotState::getStateOf("toggling_descore");
-}
 
 void Hooks::updateTelemetry()
 {

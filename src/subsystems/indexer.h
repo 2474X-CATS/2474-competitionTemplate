@@ -21,15 +21,15 @@ public:
    Indexer() : Subsystem(
                    "indexer",
                    { 
-                     (EntrySet){"detects_block_high", EntryType::BOOL},  
-                     (EntrySet){"detects_block_mid", EntryType::BOOL},
+                     (EntrySet){"detects_blocks_high", EntryType::BOOL},  
+                     (EntrySet){"detects_blocks_mid", EntryType::BOOL},
                      (EntrySet){"is_block_blue", EntryType::BOOL}, 
                      (EntrySet){"detects_jam", EntryType::BOOL}
                    } 
                   ), 
                   indexerMotor(vex::motor(vex::PORT19)), 
-                  colorSensor(vex::optical(vex::PORT10)), 
-                  distanceSensor(vex::distance(vex::PORT7))
+                  colorSensor(vex::optical(vex::PORT6)), 
+                  distanceSensor(vex::distance(vex::PORT13))
                   { 
                      globalRef = this;
                    } 
@@ -51,21 +51,17 @@ private:
 
    static double ABSOLUTE_INDEXER_SPEED;  
 
-   static double BLUE_HUE; 
-   static double RED_HUE;   
+   static array<int, 3> BLUE_RGB; 
+   static array<int, 3> RED_RGB;   
 
    static double DISTANCE_THRESHOLD;
 
-   bool detectsBlock();
+   void spinAtPercent(double percentage);
+   
+   bool hasBlueBlock();
 
-   void spinOver(); 
-   void spinUnder();  
-
-   bool shouldSpinOver(); 
-   bool shouldSpinUnder(); 
-
-   bool sensesValidBlock(); 
-   bool sensesInvalidBlock(); 
+   double distBlue(vex::optical::rgbc rgb); 
+   double distRed(vex::optical::rgbc rgb);
 
    double getExpectedVelocity(); 
 

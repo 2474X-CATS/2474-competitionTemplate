@@ -33,7 +33,6 @@ private:
     bool toggled = false;
     bool holding = false;
 
-    bool toggleSignal();
 };
 
 #endif

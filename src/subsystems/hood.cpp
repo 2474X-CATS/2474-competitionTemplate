@@ -9,7 +9,13 @@ void Hood::init()
 }
 
 void Hood::periodic()
-{
+{ 
+  if (shouldOpen()){ 
+    highPiston.close(); 
+  } else { 
+    highPiston.open();
+  }
+
   if (isHolding())
   {
     holding = true;
@@ -27,11 +33,11 @@ void Hood::periodic()
     }
   }
   if (shouldClose())
-  {
+  { 
     close();
   }
   else if (shouldOpen()) // Checks if the hood should close towards the hopper side
-  {
+  { 
     open();
   }
 }

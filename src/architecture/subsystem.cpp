@@ -86,8 +86,10 @@ void RobotState::initializeState()
         (EntrySet){"reverse_intake", EntryType::BOOL}, 
         (EntrySet){"is_team_color_blue", EntryType::BOOL}, 
         (EntrySet){"loading_high", EntryType::BOOL}, 
-        (EntrySet){"loading_mid", EntryType::BOOL}, 
-        (EntrySet){"experiencing_jam", EntryType::BOOL}, 
+        (EntrySet){"loading_mid", EntryType::BOOL},  
+        (EntrySet){"robot_is_loading", EntryType::BOOL},
+        (EntrySet){"experiencing_jam", EntryType::BOOL},  
+        (EntrySet){"color_sensitive", EntryType::BOOL}
       });
 }
 
@@ -102,77 +104,79 @@ void RobotState::updateRegular()
    */ 
    
    bool optOutOfLoading = Controller.ButtonB.pressing() && Controller.ButtonDown.pressing();
-   
+    
    manuallyModifyState("experiencing_jam", Telemetry::inst.getValueAt<bool>("indexer", "detects_jam") || Telemetry::inst.getValueAt<bool>("hopper", "detects_jam"));
    
-   if (getStateOf("experiencing_jam")){ 
-      setVibrationCode("---"); 
-   } else if (Telemetry::inst.getValueAt<bool>("drivebase", "overheating")){ 
+   if (getExternalState("indexer", "is_block_blue")){ 
       setVibrationCode("-");
    } else { 
       disableVibrations();
-   } 
+   }
 
-
-   if (getStateOf("loading_high")){ 
-      if (Telemetry::inst.getValueAt<bool>("indexer","detects_blocks_high") || optOutOfLoading || getStateOf("experiencing_jam")){ 
-         manuallyModifyState("loading_high", false); 
-         manuallyModifyState("scoring_high", false);
+   if (!getStateOf("robot_is_loading")){    
+      if (Controller.ButtonA.pressing()){ 
+        manuallyModifyState("loading_high", true);
+      } else if (Controller.ButtonLeft.pressing()){ 
+        manuallyModifyState("loading_mid", true);
       } else {
-         manuallyModifyState("scoring_high", true); 
-      }
-   } else if (getStateOf("loading_mid")) { 
-      if (Telemetry::inst.getValueAt<bool>("indexer","detects_blocks_mid") || optOutOfLoading || getStateOf("experiencing_jam")){ 
-         manuallyModifyState("loading_mid", false); 
-         manuallyModifyState("scoring_mid", false);
-      } else {
-         manuallyModifyState("scoring_mid", true); 
+        manuallyModifyState("scoring_high", Controller.ButtonR2.pressing()); 
+        manuallyModifyState("scoring_mid", Controller.ButtonR1.pressing());
+        manuallyModifyState("scoring_low", Controller.ButtonRight.pressing());   
+        manuallyModifyState("intaking_to_hopper", Controller.ButtonY.pressing());
+        manuallyModifyState("reverse_intake", Controller.ButtonB.pressing());  
+        manuallyModifyState("mixing_hopper", Controller.ButtonDown.pressing());   
       }
    } else { 
-      if (Controller.ButtonA.pressing()){ 
-       manuallyModifyState("loading_high", true);
-      } else if (Controller.ButtonLeft.pressing()){ 
-       manuallyModifyState("loading_mid", true);
-      } else { 
-       manuallyModifyState("scoring_high", Controller.ButtonR2.pressing()); 
-       manuallyModifyState("scoring_mid", Controller.ButtonR1.pressing());
-       manuallyModifyState("scoring_low", Controller.ButtonRight.pressing());   
-       manuallyModifyState("intaking_to_hopper", Controller.ButtonY.pressing());
-       manuallyModifyState("reverse_intake", Controller.ButtonB.pressing());   
-       manuallyModifyState("toggling_hood", Controller.ButtonL1.pressing()); 
-       manuallyModifyState("mixing_hopper", Controller.ButtonDown.pressing()); 
-      }
+      manuallyModifyState("scoring_high", false); 
+      manuallyModifyState("scoring_mid", false);
+      manuallyModifyState("scoring_low", false);   
+      manuallyModifyState("intaking_to_hopper", false);
+      manuallyModifyState("reverse_intake", false);  
+      manuallyModifyState("mixing_hopper", false);
+   }
+   
+   
+   if (getStateOf("loading_mid") && (getExternalState("indexer", "detects_blocks_mid") || optOutOfLoading)){ 
+      manuallyModifyState("loading_mid", false);
+   } else if (getStateOf("loading_high") && (getExternalState("indexer", "detects_blocks_high") || optOutOfLoading)){ 
+      manuallyModifyState("loading_high", false);
    } 
 
+   manuallyModifyState("robot_is_loading", getStateOf("loading_high") || getStateOf("loading_mid"));
+
+
+   manuallyModifyState("toggling_hood", Controller.ButtonL1.pressing()); 
    manuallyModifyState("matchloader_out", Controller.ButtonL2.pressing());
    manuallyModifyState("toggling_descore", Controller.ButtonX.pressing());
-   
    
 }
 
 void RobotState::updateStopped()
 {
    manuallyModifyState("intaking_to_hopper", false); 
-
    manuallyModifyState("scoring_high", false);
    manuallyModifyState("scoring_mid", false);
    manuallyModifyState("scoring_low", false); 
-
-
    manuallyModifyState("matchloader_out", false);
    manuallyModifyState("toggling_hood", false);
    manuallyModifyState("toggling_descore", false); 
    manuallyModifyState("mixing_hopper", false); 
-   manuallyModifyState("reverse_intake", false);  
+   manuallyModifyState("reverse_intake", false);   
 
    manuallyModifyState("loading_high", false); 
-   manuallyModifyState("loading_mid", false);
+   manuallyModifyState("loading_mid", false); 
+
+   manuallyModifyState("robot_is_loading", false);
 
 };
 
 bool RobotState::getStateOf(string key)
 {
    return Telemetry::inst.getValueAt<bool>("robot_state", key);
+};
+
+bool RobotState::getExternalState(string subtable, string key){ 
+   return Telemetry::inst.getValueAt<bool>(subtable, key);
 };
 
 void RobotState::vibrate(){  

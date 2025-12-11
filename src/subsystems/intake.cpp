@@ -11,14 +11,20 @@ void Intake::init()
 };
 
 void Intake::periodic()
-{
-    if (shouldIntake())
+{ 
+    if (RobotState::getStateOf("robot_is_loading")){ 
+        spinAtPercent(-0.1);
+    } 
+    else if (RobotState::getStateOf("scoring_high") || RobotState::getStateOf("scoring_mid"))
     {
-        intake();
+        spinAtPercent(-1); //Upwards
+    } 
+    else if ( RobotState::getStateOf("intaking_to_hopper")){ 
+        spinAtPercent(-0.6);
     }
-    else if (shouldOuttake())
+    else if (RobotState::getStateOf("scoring_low") || RobotState::getStateOf("reverse_intake"))
     {
-        outtake();
+        spinAtPercent(1); //Downwards
     }
     else
     {
@@ -31,30 +37,14 @@ void Intake::updateTelemetry()
     return;
 }
 
-bool Intake::shouldIntake()
-{
-    return RobotState::getStateOf("scoring_high") || RobotState::getStateOf("scoring_mid") || RobotState::getStateOf("intaking_to_hopper");
-}
 
-bool Intake::shouldOuttake()
-{
-    return RobotState::getStateOf("scoring_low") || RobotState::getStateOf("reverse_intake");
-}
-
-void Intake::intake()
-{
-    intakeMotor.setVelocity(-ABSOLUTE_INTAKE_SPEED, vex::velocityUnits::rpm);
+void Intake::spinAtPercent(double percentage){ 
+    intakeMotor.setVelocity(percentage * ABSOLUTE_INTAKE_SPEED, vex::velocityUnits::rpm); 
     intakeMotor.spin(vex::directionType::fwd);
-}
+} 
 
-void Intake::outtake()
-{
-    intakeMotor.setVelocity(ABSOLUTE_INTAKE_SPEED, vex::velocityUnits::rpm);
-    intakeMotor.spin(vex::directionType::fwd);
-}
 
 void Intake::stop()
 {
-    intakeMotor.setVelocity(0, vex::percentUnits::pct);
-    intakeMotor.spin(vex::directionType::fwd);
+    spinAtPercent(0);
 }
