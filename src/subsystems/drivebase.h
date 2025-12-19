@@ -20,8 +20,8 @@ private:
   static double ENCODER_DIST_FROM_CENTER;
   static double DRIVE_WHEEL_RADIUS_MM;
 
-  vex::rotation encoderLinear;
-  vex::inertial driveGyro;
+  //vex::rotation encoderLinear;
+  //vex::inertial driveGyro;
 
   vex::motor driveFrontLeft;
   vex::motor driveMidLeft;
@@ -35,13 +35,13 @@ private:
   vex::motor_group rightDriveMotors;
 
   //==========================================
-  PIDConstants powerPID;
+  //PIDConstants powerPID;
   PIDConstants turnPID;  
 
-  FFConstants ffConstsLinear;  
-  FFConstants ffConstsAngular; 
+  //FFConstants ffConstsLinear;  
+  //FFConstants ffConstsAngular; 
 
-  TrapezoidConstants trapConsts;
+  TrapezoidConstants trapConsts; 
 
   double startX, startY;
   double speedFactor = 1;
@@ -49,11 +49,6 @@ private:
   static Location *locations[]; 
   
   /*
-  double totalEntries = 0; 
-  double accumulatedVelocity = 0; 
-  double accumulatedAcceleration = 0;  
-  double accumulatedVoltage = 0;  
-
   USED FOR FINDING FEED FORWARD VALUES
   */ 
 
@@ -71,17 +66,16 @@ public:
                                                   (EntrySet){"Pos_X", EntryType::DOUBLE},
                                                   (EntrySet){"Pos_Y", EntryType::DOUBLE},
                                                   (EntrySet){"Angle_Degrees_CCW", EntryType::DOUBLE}, 
-                                                  (EntrySet){"overheating", EntryType::BOOL}, 
-                                                  //(EntrySet){"Last_Velocity", EntryType::DOUBLE}
+                                                  (EntrySet){"overheating", EntryType::BOOL}
                                               }),
-                                          encoderLinear(vex::rotation(vex::PORT15)),
-                                          driveGyro(vex::PORT20),
-                                          driveFrontLeft(vex::motor(vex::PORT1, vex::ratio18_1, true)),
-                                          driveMidLeft(vex::motor(vex::PORT2, vex::ratio18_1, true)),
-                                          driveBackLeft(vex::motor(vex::PORT4, vex::ratio18_1)),
-                                          driveBackRight(vex::motor(vex::PORT7, vex::ratio18_1)),
-                                          driveFrontRight(vex::motor(vex::PORT10, vex::ratio18_1, true)),
-                                          driveMidRight(vex::motor(vex::PORT9, vex::ratio18_1, true)),
+                                          //encoderLinear(vex::rotation(vex::PORT15)),
+                                          //driveGyro(vex::PORT20),
+                                          driveFrontLeft(vex::motor(vex::PORT1, vex::ratio18_1)),
+                                          driveMidLeft(vex::motor(vex::PORT2, vex::ratio18_1)),
+                                          driveBackLeft(vex::motor(vex::PORT3, vex::ratio18_1)),
+                                          driveBackRight(vex::motor(vex::PORT4, vex::ratio18_1)),
+                                          driveFrontRight(vex::motor(vex::PORT5, vex::ratio18_1)),
+                                          driveMidRight(vex::motor(vex::PORT6, vex::ratio18_1)),
                                           leftDriveMotors(vex::motor_group(driveFrontLeft, driveBackLeft, driveMidLeft)),
                                           rightDriveMotors(vex::motor_group(driveFrontRight, driveBackRight, driveMidRight)),
                                           startX((tileX) * TILE_SIZE_MM),
@@ -103,18 +97,15 @@ public:
   void voltageDriveForward(double volts); 
   void voltageTurnClockwise(double volts);   
 
- 
   void setSpeedFactor(double speedFactor);
 
   static Location *getLocation(int index);
 
   PIDConstants getTurningPID();
 
-  PIDConstants getPowerPID();  
+  //FFConstants getFFLinear(); 
 
-  FFConstants getFFLinear(); 
-
-  FFConstants getFFAngular();
+  //FFConstants getFFAngular();
 
   TrapezoidConstants getMotionConstants();  
   

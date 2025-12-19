@@ -75,7 +75,8 @@ void RobotState::initializeState()
 {
    Telemetry::inst.registerSubtable(
        "robot_state",
-       {(EntrySet){"intaking_to_hopper", EntryType::BOOL},
+       { 
+        (EntrySet){"intaking_to_hopper", EntryType::BOOL},
         (EntrySet){"scoring_high", EntryType::BOOL},
         (EntrySet){"scoring_mid", EntryType::BOOL},
         (EntrySet){"scoring_low", EntryType::BOOL},
@@ -83,66 +84,24 @@ void RobotState::initializeState()
         (EntrySet){"toggling_hood", EntryType::BOOL},
         (EntrySet){"toggling_descore", EntryType::BOOL},  
         (EntrySet){"mixing_hopper", EntryType::BOOL}, 
-        (EntrySet){"reverse_intake", EntryType::BOOL}, 
-        (EntrySet){"is_team_color_blue", EntryType::BOOL}, 
-        (EntrySet){"loading_high", EntryType::BOOL}, 
-        (EntrySet){"loading_mid", EntryType::BOOL},  
-        (EntrySet){"robot_is_loading", EntryType::BOOL},
-        (EntrySet){"experiencing_jam", EntryType::BOOL},  
+        (EntrySet){"reverse_intake", EntryType::BOOL},  
+
+        (EntrySet){"is_team_color_blue", EntryType::BOOL},  
         (EntrySet){"color_sensitive", EntryType::BOOL}
       });
 }
 
 void RobotState::updateRegular()
 {  
-
-   /* 
-   Whenever you are loading you are siphoning up cubes and preparing them to be scored on the high goal 
-   - If the indexer detects blocks 
-      THEN: The robot isn't in the loading state  
-      IF NOT: The robot should be siphoning up cubes until cubes are detected
-   */ 
-   
-   bool optOutOfLoading = Controller.ButtonB.pressing() && Controller.ButtonDown.pressing();
-    
-   manuallyModifyState("experiencing_jam", Telemetry::inst.getValueAt<bool>("indexer", "detects_jam") || Telemetry::inst.getValueAt<bool>("hopper", "detects_jam"));
-   
-   if (!getStateOf("robot_is_loading")){    
-      if (Controller.ButtonA.pressing()){ 
-        manuallyModifyState("loading_high", true);
-      } else if (Controller.ButtonLeft.pressing()){ 
-        manuallyModifyState("loading_mid", true);
-      } else {
-        manuallyModifyState("scoring_high", Controller.ButtonR2.pressing()); 
-        manuallyModifyState("scoring_mid", Controller.ButtonR1.pressing());
-        manuallyModifyState("scoring_low", Controller.ButtonRight.pressing());   
-        manuallyModifyState("intaking_to_hopper", Controller.ButtonY.pressing());
-        manuallyModifyState("reverse_intake", Controller.ButtonB.pressing());  
-        manuallyModifyState("mixing_hopper", Controller.ButtonDown.pressing());   
-      }
-   } else { 
-      manuallyModifyState("scoring_high", false); 
-      manuallyModifyState("scoring_mid", false);
-      manuallyModifyState("scoring_low", false);   
-      manuallyModifyState("intaking_to_hopper", false);
-      manuallyModifyState("reverse_intake", false);  
-      manuallyModifyState("mixing_hopper", false);
-   }
-   
-   
-   if (getStateOf("loading_mid") && (getExternalState("indexer", "detects_blocks_mid") || optOutOfLoading)){ 
-      manuallyModifyState("loading_mid", false);
-   } else if (getStateOf("loading_high") && (getExternalState("indexer", "detects_blocks_high") || optOutOfLoading)){ 
-      manuallyModifyState("loading_high", false);
-   } 
-
-   manuallyModifyState("robot_is_loading", getStateOf("loading_high") || getStateOf("loading_mid"));
-
-
+   manuallyModifyState("scoring_high", Controller.ButtonR2.pressing()); 
+   manuallyModifyState("scoring_mid", Controller.ButtonR1.pressing());
+   manuallyModifyState("scoring_low", Controller.ButtonRight.pressing());   
+   manuallyModifyState("intaking_to_hopper", Controller.ButtonY.pressing());
+   manuallyModifyState("reverse_intake", Controller.ButtonB.pressing());  
+   manuallyModifyState("mixing_hopper", Controller.ButtonDown.pressing());  
    manuallyModifyState("toggling_hood", Controller.ButtonL1.pressing()); 
    manuallyModifyState("matchloader_out", Controller.ButtonL2.pressing());
    manuallyModifyState("toggling_descore", Controller.ButtonX.pressing());
-   
 }
 
 void RobotState::updateStopped()
@@ -156,12 +115,6 @@ void RobotState::updateStopped()
    manuallyModifyState("toggling_descore", false); 
    manuallyModifyState("mixing_hopper", false); 
    manuallyModifyState("reverse_intake", false);   
-
-   manuallyModifyState("loading_high", false); 
-   manuallyModifyState("loading_mid", false); 
-
-   manuallyModifyState("robot_is_loading", false);
-
 };
 
 bool RobotState::getStateOf(string key)

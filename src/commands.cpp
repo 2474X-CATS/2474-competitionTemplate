@@ -2,7 +2,6 @@
 
 ////////////////////////////////////////////////////////////
 
-double DrivePath::ARBITRARY_SPEED = 350; 
 
 void DrivePath::start()
 {
@@ -19,9 +18,6 @@ void DrivePath::periodic()
     {
         turnPeriodic();
     }
-    hoodRef.periodic();
-    intakeRef.periodic();
-    indexerRef.periodic();
 }
 
 bool DrivePath::isOver()
@@ -31,14 +27,13 @@ bool DrivePath::isOver()
 
 void DrivePath::end()
 {
-    RobotState::manuallyModifyState("intaking_to_hopper", false);
+   return;
 }
 
 void DrivePath::drivePeriodic()
 {
     if (!initialized)
     {
-        RobotState::manuallyModifyState("intaking_to_hopper", intaking);
         initializeDrive();
         initialized = true;
     }
@@ -49,7 +44,7 @@ void DrivePath::drivePeriodic()
             operationsIndex += 1;
             initialized = false;
             drivebaseRef.stop();
-            delete drivePID;
+            delete drivingProfile;
         }
         else
         {
@@ -62,7 +57,6 @@ void DrivePath::turnPeriodic()
 {
     if (!initialized)
     {
-        RobotState::manuallyModifyState("intaking_to_hopper", false);
         initializeTurn();
         initialized = true;
     }
@@ -94,39 +88,25 @@ bool DrivePath::isTurning()
 
 bool DrivePath::isDriveOver()
 {
-    return Brain.Timer.time(vex::sec) - lastDriveTimestamp >= timeDuration;//drivePID->atSetpoint(getDrivingError());
+    return (Brain.Timer.time(vex::sec) - drivingProfile->getStartTime()) >= drivingProfile->getTotalDuration(); 
 }
 
 void DrivePath::initializeDrive()
 {
-    
     isGoingForward = setpoints.at(operationsIndex) > 0;
-
-    startingPoint[0] = drivebaseRef.get<double>("Pos_X");
-    startingPoint[1] = drivebaseRef.get<double>("Pos_Y");
-   
-    drivePID = new pidcontroller(drivebaseRef.getPowerPID(), fabs(setpoints.at(operationsIndex)));
-    drivePID->setLastTimestamp(Brain.Timer.time()); 
-
-    lastDriveTimestamp = Brain.Timer.time(vex::sec);  
-    timeDuration = fabs(setpoints.at(operationsIndex)) / ARBITRARY_SPEED;  
-
+    drivingProfile = new TrapezoidalMotionProfile(drivebaseRef.getMotionConstants(), abs(setpoints.at(operationsIndex)), Brain.Timer.time(vex::sec)); 
 }
 
 void DrivePath::drive()
 {  
     double output; 
-    //output = fabs(drivePID->calculate(getDrivingError(), Brain.Timer.time())); 
-    output = ARBITRARY_SPEED; 
+    TrapezoidalSetpoint setpoint = drivingProfile->generateSetpoint(Brain.Timer.time(vex::sec));  
+    output = setpoint.velocity;
     if (!isGoingForward)
         output *= -1;
     drivebaseRef.manualDriveForward(output); 
 }
 
-double DrivePath::getDrivingError()
-{
-    return hypot(drivebaseRef.get<double>("Pos_X") - startingPoint[0], drivebaseRef.get<double>("Pos_Y") - startingPoint[1]);
-}
 
 bool DrivePath::isTurnOver()
 {
@@ -135,7 +115,6 @@ bool DrivePath::isTurnOver()
 
 void DrivePath::initializeTurn()
 {
-
     double startAngle = drivebaseRef.get<double>("Angle_Degrees_CCW");
 
     double angleSetpoint = setpoints.at(operationsIndex);
@@ -237,19 +216,11 @@ void DriveForwardForTime::start()
 {
     drivebaseRef.setSpeedFactor(1); 
     startingTime = Brain.Timer.time();  
-    if (intaking)
-      RobotState::manuallyModifyState("intaking_to_hopper", true); 
-    else { 
-      RobotState::manuallyModifyState("intaking_to_hopper", false);
-    }
 };
 
 void DriveForwardForTime::periodic()
 {
     drivebaseRef.arcadeDrive(percentage * 100, 0); 
-    intakeRef.periodic(); 
-    indexerRef.periodic(); 
-    hoodRef.periodic(); 
 };
 
 bool DriveForwardForTime::isOver()
@@ -259,40 +230,14 @@ bool DriveForwardForTime::isOver()
 
 void DriveForwardForTime::end()
 { 
-    RobotState::manuallyModifyState("intaking_to_hopper", false);
     drivebaseRef.stop();
     drivebaseRef.setSpeedFactor(0.85);
 } 
+
 //////////////////////////////////////////////////////////////////////////////// 
-
-void TrapezoidalDriveForward::start(){ 
-    profile = new TrapezoidalMotionProfile(drivebaseRef.getMotionConstants(), distance, Brain.Timer.time(vex::sec));  
-    controller = new TrajectoryController(drivebaseRef.getPowerPID(), drivebaseRef.getFFLinear(), *profile);   
-    startingPos = {drivebaseRef.get<double>("Pos_X"), drivebaseRef.get<double>("Pos_Y")};
-};  
-
-void TrapezoidalDriveForward::periodic(){ 
-    controller->refreshSetpoints(Brain.Timer.time(vex::sec));
-    drivebaseRef.voltageDriveForward(controller->calculate(getDistTraveled())); 
-}; 
-
-bool TrapezoidalDriveForward::isOver(){ 
-    return controller->atGoal();
-};  
-
-double TrapezoidalDriveForward::getDistTraveled(){ 
-    return hypot(startingPos[0] - drivebaseRef.get<double>("Pos_X"), startingPos[1] - drivebaseRef.get<double>("Pos_Y"));
-}
-
-void TrapezoidalDriveForward::end(){ 
-    drivebaseRef.stop(); 
-}; 
-
-
-////////////////////////////////////////////////////////////////////////////////
+/*
 void IntakeToHopper::start()
 {
-    RobotState::manuallyModifyState("intaking_to_hopper", true);
     startingTime = Brain.Timer.time(vex::msec);
 };
 
@@ -398,6 +343,7 @@ void DeployMatchloader::end()
 }
 
 ////////////////////////////////////////////////////////////
+*/ 
 
 void WaitFor::start()
 {
@@ -421,25 +367,25 @@ void WaitFor::end()
 
 ////////////////////////////////////////////////////////////
 
-CommandInterface *DriveLinear(double distance, bool intaking)
+CommandInterface *DriveLinear(double distance)
 {
-    return DrivePath::getCommand({distance}, false, intaking);
+    return DrivePath::getCommand({distance}, false);
 };
 
 CommandInterface *TurnToHeading(double angle)
 {
-    return DrivePath::getCommand({angle}, true, false);
+    return DrivePath::getCommand({angle}, true);
 };
 
-CommandInterface *DriveToPoint(double setpointX, double setpointY, PathType pathType, bool intaking)
+CommandInterface *DriveToPoint(double setpointX, double setpointY, PathType pathType)
 {
-    return DriveToSetpoint::getCommand(setpointX, setpointY, -1, pathType, intaking);
+    return DriveToSetpoint::getCommand(setpointX, setpointY, -1, pathType);
 };
 
-CommandInterface *AlignWithLocation(int locationIndex, double distance, PathType pathType, bool intaking)
+CommandInterface *AlignWithLocation(int locationIndex, double distance, PathType pathType)
 {
     array<double, 2> setpoint = Drivebase::getLocation(locationIndex)->getProjectedSetpoint(distance);
-    return DriveToSetpoint::getCommand(setpoint[0], setpoint[1], Drivebase::getLocation(locationIndex)->getPerfectEntranceAngle(), pathType, intaking);
+    return DriveToSetpoint::getCommand(setpoint[0], setpoint[1], Drivebase::getLocation(locationIndex)->getPerfectEntranceAngle(), pathType);
 };
 
 CommandInterface *FaceLocation(int locationIndex)
@@ -448,6 +394,7 @@ CommandInterface *FaceLocation(int locationIndex)
     return TurnToSetpoint::getCommand(setpoint[0], setpoint[1]);
 };
 
+/*
 CommandInterface *Score(Goal_Pos pos, double duration)
 {
     return ScoreOnGoal::getCommand(pos, duration);
@@ -462,14 +409,14 @@ CommandInterface *EnableMatchloader(bool out)
 {
     return DeployMatchloader::getCommand(out);
 };
-
+*/  
 CommandInterface *Wait(double duration)
 {
     return WaitFor::getCommand(duration);
 };
 
-CommandInterface* RamForward(double percentage, double duration, bool intaking){ 
-    return DriveForwardForTime::getCommand(percentage, duration, intaking);
+CommandInterface* RamForward(double percentage, double duration){ 
+    return DriveForwardForTime::getCommand(percentage, duration);
 };   
 
 CommandInterface* GetWithinDistOfSetpoint(int locationIndex, double distFrom){  

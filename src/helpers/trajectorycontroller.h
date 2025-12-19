@@ -31,9 +31,14 @@ class TrajectoryController {
      : controller(new pidcontroller(pdConsts, 0)), 
        feedForward(new FeedForward(ffConsts)), 
        profile(profile)
-      {}; 
+      { 
+       
+      }; 
 
-     void refreshSetpoints(double time); 
+     void refreshSetpoints(double time);  
+
+     void init(); 
+     
      double calculate(double currentPosition);  
 
      bool atGoal();

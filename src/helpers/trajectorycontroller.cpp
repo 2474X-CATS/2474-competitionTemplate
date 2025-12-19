@@ -26,4 +26,8 @@ void TrajectoryController::refreshSetpoints(double time){
 
 bool TrajectoryController::atGoal(){ 
     return profile.atGoal(lastPos, controller->getDerivative());
+} 
+
+void TrajectoryController::init(){ 
+    controller->setLastTimestamp(Brain.Timer.time()); 
 }

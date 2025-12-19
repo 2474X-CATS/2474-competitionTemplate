@@ -9,7 +9,7 @@ Drivebase *Drivebase::globalRef = nullptr;
 
 double Drivebase::ENCODER_WHEEL_RADIUS_MM = 25.4;
 double Drivebase::ENCODER_DIST_FROM_CENTER = 19.02231081; // 17.665
-double Drivebase::DRIVE_WHEEL_RADIUS_MM = 76.2;
+double Drivebase::DRIVE_WHEEL_RADIUS_MM = 69.85;
 
 // array<Location*, 14> Drivebase::locations;
 
@@ -115,61 +115,60 @@ Location *Drivebase::locations[14] = {
 
 void Drivebase::init()
 {
-
+   /*
    encoderLinear.setPosition(0, vex::rotationUnits::rev);
    encoderLinear.setReversed(true); 
-
    
    driveGyro.calibrate();  
-
+   
    while (driveGyro.isCalibrating()){ 
       vex::this_thread::yield(); 
    } 
-  
-  
+   */ 
+
    leftDriveMotors.setStopping(vex::brakeType::brake);
    rightDriveMotors.setStopping(vex::brakeType::brake);
-
-   powerPID.P = 0.75;
-   powerPID.I = 0.01;
-   powerPID.D = 0.0;
-   powerPID.errorTolerance = 1;
+   
    //------------------------------
-   turnPID.P = 2.5;
-   turnPID.I = 0.01;
+   turnPID.P = 2.8;
+   turnPID.I = 1;
    turnPID.D = 0.05;
-   //turnPID.iLimit = 270;
-   turnPID.errorTolerance = 1; 
-   //-------------------------- 
+   turnPID.iLimit = 2;
+   turnPID.errorTolerance = 0.25; 
+   //--------------------------  
+   /*
    ffConstsLinear.kS = 0.1; 
    ffConstsLinear.kV = 0.2; 
    ffConstsLinear.kA = 0.3;  
    //-------------------------- 
    ffConstsAngular.kS = 0.1; 
    ffConstsAngular.kV = 0.2; 
-   ffConstsAngular.kA = 0.3;
+   ffConstsAngular.kA = 0.3; 
+   */
    //-------------------------- 
-   trapConsts.maxVelocity = 1000;  
-   trapConsts.maxAcceleration = 10; 
+   trapConsts.maxVelocity = 2750;  
+   trapConsts.maxAcceleration = 1500;  
+   
    //-------------------------- 
 
    set<double>("Pos_X", startX + ROBOT_WIDTH_MM / 2);
    set<double>("Pos_Y", startY + ROBOT_LENGTH_MM / 2);
-   set<double>("Angle_Degrees_CCW", 90); 
-   set<double>("Last_Velocity", 0);
-  
+   set<double>("Angle_Degrees_CCW", 90);  
 };
 
 void Drivebase::periodic()
-{ 
+{    
    arcadeDrive(((double)RobotState::getAxisState(AxisType::LEFT_VERTICAL)), ((double)RobotState::getAxisState(AxisType::RIGHT_HORIZONTAL)));
 }
 
 void Drivebase::updateTelemetry()
-{
+{  
+   /*
    double x = get<double>("Pos_X");
    double y = get<double>("Pos_Y");
-   
+   */  
+  
+   /*
    double currentAngle = 90 - driveGyro.heading(vex::rotationUnits::deg);
 
    if (currentAngle < 0)
@@ -177,8 +176,10 @@ void Drivebase::updateTelemetry()
       currentAngle += 360;
    } 
 
-   set<double>("Angle_Degrees_CCW", currentAngle);
+   set<double>("Angle_Degrees_CCW", currentAngle); 
+   */
 
+   /*
    double hypotenuse; 
    hypotenuse = ((encoderLinear.velocity(vex::velocityUnits::rpm) * 2 * M_PI * ENCODER_WHEEL_RADIUS_MM) / 3000);
    double angleRadians = get<double>("Angle_Degrees_CCW") * (2 * M_PI) / 360;
@@ -188,9 +189,9 @@ void Drivebase::updateTelemetry()
 
    set<double>("Pos_X", x);
    set<double>("Pos_Y", y);
-   
+   */ 
    double temperatureSum = 0;  
-
+ 
    temperatureSum += driveFrontLeft.temperature(vex::temperatureUnits::celsius); 
    temperatureSum += driveFrontRight.temperature(vex::temperatureUnits::celsius); 
    temperatureSum += driveMidLeft.temperature(vex::temperatureUnits::celsius); 
@@ -203,26 +204,12 @@ void Drivebase::updateTelemetry()
    set<bool>("overheating", avgTemp >= MOTOR_TEMP_LIMIT_CELSIUS); 
 
    //---------------------------------------------------------
-
+   /*
    Brain.Screen.printAt(20, 100, "X: %f", get<double>("Pos_X"));
    Brain.Screen.printAt(20, 125, "Y: %f", get<double>("Pos_Y")); 
    Brain.Screen.printAt(20, 150, "Angle Heading: %f", get<double>("Angle_Degrees_CCW"));  
-   
-   /*
-   double currentVelocity = (encoderLinear.velocity(vex::velocityUnits::rpm) * 2 * M_PI * ENCODER_WHEEL_RADIUS_MM) / 3000; 
-   double currentAcceleration = (currentVelocity - get<double>("Last_Velocity")) / 0.02;
-   
-   totalEntries++; 
-
-   accumulatedVelocity += currentVelocity; 
-   accumulatedAcceleration += currentAcceleration; 
-   accumulatedVoltage += (leftDriveMotors.voltage() + rightDriveMotors.voltage()) / 2 / 0.02;
-
-   Brain.Screen.printAt(20, 200, "AVG Acceleration (MM/S^2): %f", accumulatedAcceleration / totalEntries); 
-   Brain.Screen.printAt(20, 175, "AVG Velocity (MM/S): %f", accumulatedVelocity / totalEntries);   
-   Brain.Screen.printAt(20, 225, "AVG Voltage Applied (V/S): %f", accumulatedVoltage / totalEntries);
-   set<double>("Last_Velocity", currentVelocity); 
    */
+ 
    
 };
 
@@ -303,16 +290,13 @@ void Drivebase::stop()
    rightDriveMotors.setVelocity(0, vex::percentUnits::pct);
 };
 
-PIDConstants Drivebase::getPowerPID()
-{
-   return this->powerPID;
-};
 
 PIDConstants Drivebase::getTurningPID()
 {
    return this->turnPID;
 }; 
 
+/*
 FFConstants Drivebase::getFFAngular(){ 
    return ffConstsAngular;
 } 
@@ -320,7 +304,7 @@ FFConstants Drivebase::getFFAngular(){
 FFConstants Drivebase::getFFLinear(){ 
    return ffConstsLinear;
 } 
-
+*/
 TrapezoidConstants Drivebase::getMotionConstants(){ 
    return this->trapConsts; 
 }; 

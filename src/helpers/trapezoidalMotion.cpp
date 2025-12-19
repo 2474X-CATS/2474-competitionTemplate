@@ -4,13 +4,13 @@
 void TrapezoidalMotionProfile::init(){  
   
    accelTime = maxVelocity / maxAcceleration; 
-   accelDist = accelTime * maxVelocity; 
+   accelDist = (0.5 * maxAcceleration * pow(accelTime,2)); 
 
    if (accelDist > setpoint / 2){ 
-     accelTime = sqrt((setpoint / 2) / (maxAcceleration / 2)); 
-     accelDist = 0.5 * maxAcceleration * pow(accelTime, 2); 
-     maxVelocity = accelTime * accelDist; 
-   } 
+     accelTime = sqrt((setpoint / maxAcceleration)); 
+     accelDist = setpoint / 2; 
+     maxVelocity = accelTime * maxAcceleration; 
+   }  
 
    decelDist = accelDist; 
    decelTime = accelTime; 
