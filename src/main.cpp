@@ -1,17 +1,17 @@
 #include "vex.h"
 #include "architecture/robot.h"
 #include <iostream>
-
-#include "subsystems/drivebase.h" 
 /*
+#include "subsystems/drivebase.h" 
 #include "subsystems/indexer.h"
 #include "subsystems/hood.h"
 #include "subsystems/hopper.h"
 #include "subsystems/intake.h"
 #include "subsystems/matchloader.h"
 #include "subsystems/hooks.h"  
-*/
+*/ 
 
+#include "subsystems/hooks.h" 
 #include "commands.h"
 
 using namespace vex;
@@ -52,16 +52,16 @@ void driveCommandMatch(std::vector<CommandInterface *> commandGroup)
 }
 
 
-
 int main()
 {
 
   vexcodeInit();
-  // Initialize subsystems
+  
   Drivebase drive = Drivebase(2,1/3); // Tile location right 1 up 1
+  Matchloader matchloader;  
+  Hooks hooks; 
 
   robot.initialize();  
-  
   RobotState::manuallyModifyState("is_team_color_blue", true);
   RobotState::manuallyModifyState("color_sensitive", false); 
   

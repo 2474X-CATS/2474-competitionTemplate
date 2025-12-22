@@ -82,10 +82,13 @@ void RobotState::initializeState()
 
         (EntrySet){"matchloader_out", EntryType::BOOL},
         
-        (EntrySet){"toggling_descore", EntryType::BOOL},  
+        (EntrySet){"k_descore_held", EntryType::BOOL},
+        (EntrySet){"descore_out", EntryType::BOOL},  
           
         (EntrySet){"is_team_color_blue", EntryType::BOOL},  
-        (EntrySet){"color_sensitive", EntryType::BOOL}, 
+        (EntrySet){"color_sensitive", EntryType::BOOL},  
+
+        (EntrySet){"intaking", EntryType::BOOL},
        
         /*
        
@@ -100,8 +103,9 @@ void RobotState::updateRegular()
 {  
    manuallyModifyState("scoring_high", Controller.ButtonR2.pressing()); 
    manuallyModifyState("scoring_mid", Controller.ButtonR1.pressing());
-   manuallyModifyState("scoring_low", Controller.ButtonRight.pressing());  
-   manuallyModifyState("toggling_descore", Controller.ButtonX.pressing());   
+   manuallyModifyState("scoring_low", Controller.ButtonRight.pressing()); 
+   
+   manuallyModifyState("intaking", Controller.ButtonA.pressing()); 
    
    if (Controller.ButtonL1.pressing()){ 
       manuallyModifyState("k_inversion_held", true);  
@@ -110,24 +114,33 @@ void RobotState::updateRegular()
          manuallyModifyState("k_inversion_held", false); 
          manuallyModifyState("is_drive_inverted", !getStateOf("is_drive_inverted")); 
       }
-   }
-  
+   } 
+   
+   if (Controller.ButtonX.pressing()){ 
+      manuallyModifyState("k_descore_held", true);  
+   } else { 
+      if (getStateOf("k_descore_held")){ 
+         manuallyModifyState("k_descore_held", false); 
+         manuallyModifyState("descore_out", !getStateOf("descore_out")); 
+      }
+   } 
+
    manuallyModifyState("matchloader_out", Controller.ButtonL2.pressing());  
- 
 }
 
 void RobotState::updateStopped()
-{  
+{   
    manuallyModifyState("scoring_high", false); 
    manuallyModifyState("scoring_mid", false);
    manuallyModifyState("scoring_low", false);  
-   manuallyModifyState("toggling_descore", false);   
-   
+
    manuallyModifyState("matchloader_out", false); 
 
-   manuallyModifyState("k_inversion_held", false); 
-   manuallyModifyState("is_drive_inverted", false);
-   
+   manuallyModifyState("k_inversion_held", false);  
+   manuallyModifyState("k_descore_out", false); 
+   manuallyModifyState("descore_out", false); 
+
+   manuallyModifyState("intaking", false); 
 };
 
 bool RobotState::getStateOf(string key)

@@ -8,10 +8,8 @@
 Drivebase *Drivebase::globalRef = nullptr;
 
 double Drivebase::ENCODER_WHEEL_RADIUS_MM = 25.4;
-//double Drivebase::ENCODER_DIST_FROM_CENTER = 19.02231081; // 17.665
+double Drivebase::ENCODER_DIST_FROM_CENTER = 19.02231081; // 17.665
 double Drivebase::DRIVE_WHEEL_RADIUS_MM = 69.85;
-
-// array<Location*, 14> Drivebase::locations;
 
 Location *Drivebase::locations[14] = {
     new Location(
@@ -114,16 +112,11 @@ Location *Drivebase::locations[14] = {
         90)};
 
 void Drivebase::init()
-{ 
+{  
+   
    encoderLinear.setPosition(0, vex::rotationUnits::rev);
-   encoderLinear.setReversed(true); 
-   
-   driveGyro.calibrate();  
-   
-   while (driveGyro.isCalibrating()){ 
-      vex::this_thread::yield(); 
-   } 
-   
+   encoderAngular.setPosition(0, vex::rotationUnits::rev);   
+
    leftDriveMotors.setStopping(vex::brakeType::brake);
    rightDriveMotors.setStopping(vex::brakeType::brake);
    
@@ -154,13 +147,14 @@ void Drivebase::updateTelemetry()
 {  
    double x = get<double>("Pos_X");
    double y = get<double>("Pos_Y");
-  
-   double currentAngle = 90 - driveGyro.heading(vex::rotationUnits::deg);  
+   
+   double currentAngle; 
+   currentAngle = 90 - fmod((encoderAngular.position(vex::rotationUnits::rev) * 2 * ENCODER_WHEEL_RADIUS_MM * M_PI) / (2 * ENCODER_DIST_FROM_CENTER * M_PI) * 360, 360);  
 
    if (RobotState::getStateOf("is_drive_inverted")){ 
       currentAngle += 180;
-   }
-
+   }  
+   
    if (currentAngle < 0)
    {
       currentAngle += 360;

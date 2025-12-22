@@ -16,11 +16,11 @@ class Drivebase : public Subsystem
 {
 private:
   static double ENCODER_WHEEL_RADIUS_MM;
-  //static double ENCODER_DIST_FROM_CENTER;
+  static double ENCODER_DIST_FROM_CENTER;
   static double DRIVE_WHEEL_RADIUS_MM; 
 
   vex::rotation encoderLinear;
-  vex::inertial driveGyro;
+  vex::rotation encoderAngular;
 
   vex::motor driveFrontLeft;
   vex::motor driveMidLeft;
@@ -70,10 +70,11 @@ public:
                                                   (EntrySet){"Angle_Degrees_CCW", EntryType::DOUBLE}, 
                                                   (EntrySet){"overheating", EntryType::BOOL}
                                               }), 
-
-                                          encoderLinear(vex::rotation(vex::PORT15)),
-                                          driveGyro(vex::PORT20), 
                                           
+                                          //Get correct ports 
+                                          encoderLinear(vex::rotation(vex::PORT15)),
+                                          encoderAngular(vex::rotation(vex::PORT15)), 
+
                                           driveFrontLeft(vex::motor(vex::PORT1, vex::ratio18_1)),
                                           driveMidLeft(vex::motor(vex::PORT2, vex::ratio18_1, true)),
                                           driveBackLeft(vex::motor(vex::PORT3, vex::ratio18_1)), 

@@ -214,7 +214,6 @@ void CloseDistanceBetweenSetpoint::start(){
 
 void DriveForwardForTime::start()
 {
-    drivebaseRef.setSpeedFactor(1); 
     startingTime = Brain.Timer.time();  
 };
 
@@ -231,7 +230,6 @@ bool DriveForwardForTime::isOver()
 void DriveForwardForTime::end()
 { 
     drivebaseRef.stop();
-    drivebaseRef.setSpeedFactor(0.85);
 } 
 
 //////////////////////////////////////////////////////////////////////////////// 
@@ -318,12 +316,7 @@ void ScoreOnGoal::end()
 
 void DeployMatchloader::start()
 {
-    if (isOut)
-        RobotState::manuallyModifyState("matchloader_out", true);
-    else
-    {
-        RobotState::manuallyModifyState("matchloader_out", false);
-    }
+    RobotState::manuallyModifyState("matchloader_out", isOut);
 }
 
 void DeployMatchloader::periodic()

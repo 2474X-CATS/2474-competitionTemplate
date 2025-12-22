@@ -95,7 +95,7 @@ void Robot::registerSystemSubtables()
 };
 
 void Robot::driverControl()
-{
+{ 
   RobotState::setMode(ControlType::DRIVER);
   double timestamp;
   timestamp = Brain.Timer.time();

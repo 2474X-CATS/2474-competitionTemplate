@@ -1,7 +1,10 @@
 #ifndef __COMMANDS_H__
 #define __COMMANDS_H__
 
-#include "subsystems/drivebase.h"
+#include "subsystems/drivebase.h"  
+#include "subsystems/intake.h"
+#include "subsystems/matchloader.h" 
+
 #include "architecture/command.h" 
 #include "helpers/trajectorycontroller.h"
 
@@ -256,6 +259,7 @@ protected:
   bool isOver() override;
   void end() override;
 };
+*/ 
 
 class DeployMatchloader : Command<Matchloader>
 {
@@ -282,7 +286,7 @@ public:
 
   ~DeployMatchloader() override = default;
 };
-*/
+
 class WaitFor : Command<DummySystem>
 {
 private:
@@ -315,7 +319,10 @@ CommandInterface *AlignWithLocation(int locationIndex, double distance, PathType
 CommandInterface *GetWithinDistOfSetpoint(int locationIndex, double distFrom);
 CommandInterface *FaceLocation(int locationIndex); 
 CommandInterface *Wait(double duration); 
-CommandInterface* RamForward(double percentage, double duration); 
+CommandInterface *RamForward(double percentage, double duration);  
+
+
+
 
 
 
