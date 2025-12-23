@@ -11,7 +11,6 @@ void Indexer::init(){
 }  
 
 void Indexer::periodic(){   
-
    if (RobotState::getStateOf("scoring_high")){ 
      indexerMotor.setVelocity(ABSOLUTE_INDEXER_SPEED, vex::velocityUnits::rpm); 
      indexerMotor.spin(vex::directionType::fwd); 
@@ -23,10 +22,10 @@ void Indexer::periodic(){
      indexerMotor.spin(vex::directionType::fwd);
    }  
 
-   if (RobotState::getStateOf("scoring_high")){ 
-     indexerHatch.close();
-   } else { 
+   if (RobotState::getStateOf("scoring_mid")){ 
      indexerHatch.open();
+   } else { 
+     indexerHatch.close();
    }  
 
 } 

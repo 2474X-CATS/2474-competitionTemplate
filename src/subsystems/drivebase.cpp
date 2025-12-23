@@ -230,7 +230,7 @@ void Drivebase::arcadeDrive(double speed, double rotation)
    rightDriveMotors.setVelocity((speed - rotation), vex::percentUnits::pct);  
    
    leftDriveMotors.spin(vex::directionType::rev);
-   rightDriveMotors.spin(vex::directionType::fwd);
+   rightDriveMotors.spin(vex::directionType::fwd);  
    
 };
 

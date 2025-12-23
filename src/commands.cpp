@@ -17,7 +17,8 @@ void DrivePath::periodic()
     else
     {
         turnPeriodic();
-    }
+    } 
+    intakeRef.periodic(); 
 }
 
 bool DrivePath::isOver()
@@ -27,7 +28,7 @@ bool DrivePath::isOver()
 
 void DrivePath::end()
 {
-   return;
+   RobotState::manuallyModifyState("intaking", false);
 }
 
 void DrivePath::drivePeriodic()
@@ -35,7 +36,8 @@ void DrivePath::drivePeriodic()
     if (!initialized)
     {
         initializeDrive();
-        initialized = true;
+        initialized = true;  
+        RobotState::manuallyModifyState("intaking", intaking);
     }
     else
     {
@@ -44,7 +46,8 @@ void DrivePath::drivePeriodic()
             operationsIndex += 1;
             initialized = false;
             drivebaseRef.stop();
-            delete drivingProfile;
+            delete drivingProfile; 
+            RobotState::manuallyModifyState("intaking", false);
         }
         else
         {
@@ -94,7 +97,8 @@ bool DrivePath::isDriveOver()
 void DrivePath::initializeDrive()
 {
     isGoingForward = setpoints.at(operationsIndex) > 0;
-    drivingProfile = new TrapezoidalMotionProfile(drivebaseRef.getMotionConstants(), abs(setpoints.at(operationsIndex)), Brain.Timer.time(vex::sec)); 
+    drivingProfile = new TrapezoidalMotionProfile(drivebaseRef.getMotionConstants(), abs(setpoints.at(operationsIndex)), Brain.Timer.time(vex::sec));
+    
 }
 
 void DrivePath::drive()
@@ -129,7 +133,8 @@ void DrivePath::initializeTurn()
     }
 
     turnPID = new pidcontroller(drivebaseRef.getTurningPID(), 0);
-    turnPID->setLastTimestamp(Brain.Timer.time());
+    turnPID->setLastTimestamp(Brain.Timer.time()); 
+
 }
 
 void DrivePath::turn()
@@ -213,47 +218,49 @@ void CloseDistanceBetweenSetpoint::start(){
 ////////////////////////////////////////////////////////////
 
 void DriveForwardForTime::start()
-{
-    startingTime = Brain.Timer.time();  
+{ 
+    RobotState::manuallyModifyState("intaking", intaking);
+    startingTime = Brain.Timer.time(vex::msec);   
 };
 
 void DriveForwardForTime::periodic()
 {
-    drivebaseRef.arcadeDrive(percentage * 100, 0); 
+    drivebaseRef.arcadeDrive(percentage * 100, 0);  
+    intakeRef.periodic();
 };
 
 bool DriveForwardForTime::isOver()
 {
-    return Brain.Timer.time() - startingTime >= timeDuration;
+    return Brain.Timer.time(vex::msec) - startingTime >= timeDuration;
 }
 
 void DriveForwardForTime::end()
-{ 
+{  
+    RobotState::manuallyModifyState("intaking", false);
     drivebaseRef.stop();
 } 
 
 //////////////////////////////////////////////////////////////////////////////// 
-/*
-void IntakeToHopper::start()
-{
+
+void IntakeCubes::start()
+{ 
+    RobotState::manuallyModifyState("intaking", true); 
     startingTime = Brain.Timer.time(vex::msec);
 };
 
-void IntakeToHopper::periodic()
+void IntakeCubes::periodic()
 {
-    hoodRef.periodic();
-    indexerRef.periodic();
     intakeRef.periodic();
 };
 
-bool IntakeToHopper::isOver()
+bool IntakeCubes::isOver()
 {
     return Brain.Timer.time(vex::msec) - startingTime >= timeDuration;
 }
 
-void IntakeToHopper::end()
+void IntakeCubes::end()
 {
-    RobotState::manuallyModifyState("intaking_to_hopper", false);
+    RobotState::manuallyModifyState("intaking", false);
 }
 
 ////////////////////////////////////////////////////////////
@@ -282,8 +289,6 @@ void ScoreOnGoal::start()
 
 void ScoreOnGoal::periodic()
 {
-    hoodRef.periodic();
-    hopperRef.periodic();
     indexerRef.periodic();
     intakeRef.periodic();
 }
@@ -295,7 +300,6 @@ bool ScoreOnGoal::isOver()
 
 void ScoreOnGoal::end()
 {
-    hopperRef.stop();
     switch (goal)
     {
     case 1:
@@ -336,7 +340,7 @@ void DeployMatchloader::end()
 }
 
 ////////////////////////////////////////////////////////////
-*/ 
+
 
 void WaitFor::start()
 {
@@ -356,29 +360,49 @@ bool WaitFor::isOver()
 void WaitFor::end()
 {
     return;
+} 
+
+void ModifyRobotState::start()
+{
+   RobotState::manuallyModifyState(entryKey, value);
+}
+
+void ModifyRobotState::periodic()
+{
+    return;
+}
+
+bool ModifyRobotState::isOver()
+{
+    return true;
+}
+
+void ModifyRobotState::end()
+{
+    return;
 }
 
 ////////////////////////////////////////////////////////////
 
-CommandInterface *DriveLinear(double distance)
+CommandInterface *DriveLinear(double distance, bool intaking)
 {
-    return DrivePath::getCommand({distance}, false);
+    return DrivePath::getCommand({distance}, false, intaking);
 };
 
 CommandInterface *TurnToHeading(double angle)
 {
-    return DrivePath::getCommand({angle}, true);
+    return DrivePath::getCommand({angle}, true, false);
 };
 
-CommandInterface *DriveToPoint(double setpointX, double setpointY, PathType pathType)
-{
-    return DriveToSetpoint::getCommand(setpointX, setpointY, -1, pathType);
+CommandInterface *DriveToPoint(double setpointX, double setpointY, PathType pathType, bool intaking)
+{ 
+    return DriveToSetpoint::getCommand(setpointX, setpointY, -1, pathType, intaking);
 };
 
-CommandInterface *AlignWithLocation(int locationIndex, double distance, PathType pathType)
+CommandInterface *AlignWithLocation(int locationIndex, double distance, PathType pathType, bool intaking)
 {
     array<double, 2> setpoint = Drivebase::getLocation(locationIndex)->getProjectedSetpoint(distance);
-    return DriveToSetpoint::getCommand(setpoint[0], setpoint[1], Drivebase::getLocation(locationIndex)->getPerfectEntranceAngle(), pathType);
+    return DriveToSetpoint::getCommand(setpoint[0], setpoint[1], Drivebase::getLocation(locationIndex)->getPerfectEntranceAngle(), pathType, intaking);
 };
 
 CommandInterface *FaceLocation(int locationIndex)
@@ -387,34 +411,36 @@ CommandInterface *FaceLocation(int locationIndex)
     return TurnToSetpoint::getCommand(setpoint[0], setpoint[1]);
 };
 
-/*
-CommandInterface *Score(Goal_Pos pos, double duration)
-{
-    return ScoreOnGoal::getCommand(pos, duration);
-};
+CommandInterface* RamForward(double percentage, double duration, bool intaking){ 
+    return DriveForwardForTime::getCommand(percentage, duration, intaking);
+};   
 
-CommandInterface *IntakeCubes(double duration)
-{
-    return IntakeToHopper::getCommand(duration);
-};
+CommandInterface* GetWithinDistOfSetpoint(int locationIndex, double distFrom, bool intaking){  
+    array<double, 2> setpoint = Drivebase::getLocation(locationIndex)->getProjectedSetpoint(0);
+    return CloseDistanceBetweenSetpoint::getCommand(setpoint[0], setpoint[1], distFrom, intaking);
+} 
 
-CommandInterface *EnableMatchloader(bool out)
-{
+
+CommandInterface *CollectCubes(double timeDuration){ 
+    return IntakeCubes::getCommand(timeDuration); 
+};   
+
+CommandInterface *Score(Goal_Pos pos, double timeDuration){ 
+    return ScoreOnGoal::getCommand(pos, timeDuration);  
+}; 
+
+CommandInterface *EnableMatchloader(bool out){ 
     return DeployMatchloader::getCommand(out);
-};
-*/  
+};  
+
+CommandInterface *SetRobotState(string key, bool val){ 
+    return ModifyRobotState::getCommand(key, val);
+}; 
+
 CommandInterface *Wait(double duration)
 {
     return WaitFor::getCommand(duration);
-};
+};  
 
-CommandInterface* RamForward(double percentage, double duration){ 
-    return DriveForwardForTime::getCommand(percentage, duration);
-};   
 
-CommandInterface* GetWithinDistOfSetpoint(int locationIndex, double distFrom){  
-    array<double, 2> setpoint = Drivebase::getLocation(locationIndex)->getProjectedSetpoint(0);
-    return CloseDistanceBetweenSetpoint::getCommand(setpoint[0], setpoint[1], distFrom);
-}
 
-/////////////////////////////////////////////////////////////////////

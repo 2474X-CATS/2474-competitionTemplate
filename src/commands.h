@@ -2,7 +2,8 @@
 #define __COMMANDS_H__
 
 #include "subsystems/drivebase.h"  
-#include "subsystems/intake.h"
+#include "subsystems/intake.h" 
+#include "subsystems/indexer.h"
 #include "subsystems/matchloader.h" 
 
 #include "architecture/command.h" 
@@ -40,13 +41,17 @@ typedef enum
   MANHATTAN_YX
 } PathType;
 
-class DrivePath : public Command<Drivebase>
+class DrivePath : public Command<Drivebase, Intake>
 {
 
-protected: 
-  Drivebase &drivebaseRef;
+protected:  
+
+  Drivebase &drivebaseRef; 
+  Intake &intakeRef; 
+
   vector<double> setpoints;
-  bool turningFirst;
+  bool turningFirst; 
+  bool intaking;
 
   pidcontroller *turnPID = nullptr;
   TrapezoidalMotionProfile *drivingProfile = nullptr;
@@ -83,15 +88,17 @@ protected:
   void end() override;
 
 public:
-  static CommandInterface *getCommand(vector<double> setpoints, bool turningFirst)
+  static CommandInterface *getCommand(vector<double> setpoints, bool turningFirst, bool intaking)
   {
-    return new DrivePath(*Drivebase::globalRef, setpoints, turningFirst);
+    return new DrivePath(*Drivebase::globalRef, *Intake::globalRef, setpoints, turningFirst, intaking);
   }
 
-  DrivePath(Drivebase &drive, vector<double> setpoints, bool turningFirst) : Command<Drivebase>(drive),
-                                                                             drivebaseRef(drive),
-                                                                             setpoints(setpoints),
-                                                                             turningFirst(turningFirst),
+  DrivePath(Drivebase &drive, Intake &intake, vector<double> setpoints, bool turningFirst, bool intaking) : Command<Drivebase, Intake>(drive, intake),
+                                                                             drivebaseRef(drive), 
+                                                                             intakeRef(intake),  
+                                                                             intaking(intaking),
+                                                                             setpoints(setpoints), 
+                                                                             turningFirst(turningFirst), 
                                                                              initialized(false),
                                                                              operationsIndex(0),
                                                                              numOfOperations(setpoints.size() - 1) {};
@@ -107,12 +114,12 @@ protected:
   PathType pathType;
 
 public:
-  static CommandInterface *getCommand(double setpointX, double setpointY, double endingAngle, PathType pathType)
+  static CommandInterface *getCommand(double setpointX, double setpointY, double endingAngle, PathType pathType, bool intaking)
   {
-    return new DriveToSetpoint(*Drivebase::globalRef, setpointX, setpointY, endingAngle, pathType);
+    return new DriveToSetpoint(*Drivebase::globalRef, *Intake::globalRef, setpointX, setpointY, endingAngle, pathType, intaking);
   }
 
-  DriveToSetpoint(Drivebase &drive, double setpointX, double setpointY, double endingAngle, PathType pathType) : DrivePath(drive, {}, true),
+  DriveToSetpoint(Drivebase &drive, Intake &intake, double setpointX, double setpointY, double endingAngle, PathType pathType, bool intaking) : DrivePath(drive, intake, {}, true, intaking),
                                                                                                                  setpointX(setpointX),
                                                                                                                  setpointY(setpointY),
                                                                                                                  endingAngle(endingAngle),
@@ -130,10 +137,10 @@ public:
 
   static CommandInterface *getCommand(double setpointX, double setpointY)
   {
-    return new TurnToSetpoint(*Drivebase::globalRef, setpointX, setpointY);
+    return new TurnToSetpoint(*Drivebase::globalRef, *Intake::globalRef, setpointX, setpointY);
   }
 
-  TurnToSetpoint(Drivebase &drive, double setpointX, double setpointY) : DriveToSetpoint(drive, setpointX, setpointY, -1, PathType::EUCLIDEAN){};
+  TurnToSetpoint(Drivebase &drive, Intake &intake, double setpointX, double setpointY) : DriveToSetpoint(drive, intake, setpointX, setpointY, -1, PathType::EUCLIDEAN, false){};
                                                                                                                                                                               
 protected:
   void start() override;
@@ -144,13 +151,13 @@ class CloseDistanceBetweenSetpoint : DriveToSetpoint
 
 public: 
  
-  static CommandInterface *getCommand(double setpointX, double setpointY, double distFrom)
+  static CommandInterface *getCommand(double setpointX, double setpointY, double distFrom, bool intaking)
   {
-    return new CloseDistanceBetweenSetpoint(*Drivebase::globalRef, setpointX, setpointY, distFrom);
+    return new CloseDistanceBetweenSetpoint(*Drivebase::globalRef, *Intake::globalRef,  setpointX, setpointY, distFrom, intaking);
   }
 
-  CloseDistanceBetweenSetpoint(Drivebase &drive, double setpointX, double setpointY, double distFrom) :  
-                         DriveToSetpoint(drive, setpointX, setpointY, -1, PathType::EUCLIDEAN), 
+  CloseDistanceBetweenSetpoint(Drivebase &drive, Intake &intake, double setpointX, double setpointY, double distFrom, bool intaking) :  
+                         DriveToSetpoint(drive, intake, setpointX, setpointY, -1, PathType::EUCLIDEAN, intaking), 
                          distFrom(distFrom) {};
                                                                                                                                                                               
 protected:
@@ -161,11 +168,14 @@ private:
 }; 
 
 
-class DriveForwardForTime : Command<Drivebase>
+class DriveForwardForTime : Command<Drivebase, Intake>
 {
 private: 
 
   Drivebase &drivebaseRef;  
+  Intake &intakeRef; 
+
+  bool intaking;
 
   double percentage;
   double startingTime;
@@ -179,27 +189,28 @@ protected:
   void end() override;
 
 public:
-  static CommandInterface *getCommand(double percentage, double timeDuration)
+  static CommandInterface *getCommand(double percentage, double timeDuration, bool intaking)
   {
-    return new DriveForwardForTime(*Drivebase::globalRef, percentage, timeDuration);
+    return new DriveForwardForTime(*Drivebase::globalRef, *Intake::globalRef,  percentage, timeDuration, intaking);
   }
 
-  DriveForwardForTime(Drivebase &drivebase, double percentage, double timeDuration) :  
-                                                                                      Command<Drivebase>(drivebase),
-                                                                                      drivebaseRef(drivebase), 
+  DriveForwardForTime(Drivebase &drivebase, Intake &intake, double percentage, double timeDuration, bool intaking) :  
+                                                                                      Command<Drivebase, Intake>(drivebase, intake),  
+                                                                                      intaking(intaking),
+                                                                                      drivebaseRef(drivebase),  
+                                                                                      intakeRef(intake),
                                                                                       percentage(percentage),
                                                                                       timeDuration(timeDuration)  
                                                                                       {};
 
   ~DriveForwardForTime() override = default;
-};
-/*
-class IntakeToHopper : public Command<Intake, Indexer, Hood>
+}; 
+
+
+class IntakeCubes : public Command<Intake>
 {
 private:
   Intake &intakeRef;
-  Indexer &indexerRef;
-  Hood &hoodRef;
 
   double startingTime;
   double timeDuration;
@@ -213,25 +224,21 @@ protected:
 public:
   static CommandInterface *getCommand(double timeDuration)
   {
-    return new IntakeToHopper(*Intake::globalRef, *Indexer::globalRef, *Hood::globalRef, timeDuration);
+    return new IntakeCubes(*Intake::globalRef, timeDuration);
   }
 
-  IntakeToHopper(Intake &intake, Indexer &indexer, Hood &hood, double timeDuration) : Command<Intake, Indexer, Hood>(intake, indexer, hood),
+  IntakeCubes(Intake &intake, double timeDuration) : Command<Intake>(intake),
                                                                                       intakeRef(intake),
-                                                                                      indexerRef(indexer),
-                                                                                      hoodRef(hood),
                                                                                       timeDuration(timeDuration) {};
 
-  ~IntakeToHopper() override = default;
+  ~IntakeCubes() override = default;
 };
 
-class ScoreOnGoal : public Command<Intake, Indexer, Hood, Hopper>
+class ScoreOnGoal : public Command<Intake, Indexer>
 {
 private:
   Intake &intakeRef;
   Indexer &indexerRef;
-  Hood &hoodRef;
-  Hopper &hopperRef;
 
   double startingTime;
   double timeDuration;
@@ -240,14 +247,12 @@ private:
 public:
   static CommandInterface *getCommand(int goal, double timeDuration)
   {
-    return new ScoreOnGoal(*Intake::globalRef, *Indexer::globalRef, *Hood::globalRef, *Hopper::globalRef, goal, timeDuration);
+    return new ScoreOnGoal(*Intake::globalRef, *Indexer::globalRef, goal, timeDuration);
   };
 
-  ScoreOnGoal(Intake &intake, Indexer &indexer, Hood &hood, Hopper &hopper, int goal, double timeDuration) : Command<Intake, Indexer, Hood, Hopper>(intake, indexer, hood, hopper),
+  ScoreOnGoal(Intake &intake, Indexer &indexer, int goal, double timeDuration) : Command<Intake, Indexer>(intake, indexer),
                                                                                                              intakeRef(intake),
                                                                                                              indexerRef(indexer),
-                                                                                                             hoodRef(hood),
-                                                                                                             hopperRef(hopper),
                                                                                                              timeDuration(timeDuration),
                                                                                                              goal(goal) {};
 
@@ -259,7 +264,7 @@ protected:
   bool isOver() override;
   void end() override;
 };
-*/ 
+
 
 class DeployMatchloader : Command<Matchloader>
 {
@@ -309,17 +314,54 @@ protected:
   void periodic() override;
   bool isOver() override;
   void end() override;
+}; 
+
+class ModifyRobotState : Command<DummySystem>
+{ 
+public:  
+
+  string entryKey; 
+  bool value; 
+
+  static CommandInterface *getCommand(string key, bool val)
+  {
+    return new ModifyRobotState(key, val);
+  }
+
+  ModifyRobotState(string key, bool val) :  
+                                 Command<DummySystem>(GLOBAL_DUMMY),
+                                 entryKey(key), 
+                                 value(val) {};
+
+  ~ModifyRobotState() override = default;
+
+protected:
+  void start() override;
+  void periodic() override;
+  bool isOver() override;
+  void end() override;
 };
 
 
-CommandInterface *DriveLinear(double distance);
+CommandInterface *DriveLinear(double distance, bool intaking);
 CommandInterface *TurnToHeading(double angle);
-CommandInterface *DriveToPoint(double setpointX, double setpointY, PathType pathType);
-CommandInterface *AlignWithLocation(int locationIndex, double distance, PathType pathType);  
-CommandInterface *GetWithinDistOfSetpoint(int locationIndex, double distFrom);
-CommandInterface *FaceLocation(int locationIndex); 
-CommandInterface *Wait(double duration); 
-CommandInterface *RamForward(double percentage, double duration);  
+CommandInterface *DriveToPoint(double setpointX, double setpointY, PathType pathType, bool intaking);
+CommandInterface *AlignWithLocation(int locationIndex, double distance, PathType pathType, bool intaking);  
+CommandInterface *GetWithinDistOfSetpoint(int locationIndex, double distFrom, bool intaking);
+CommandInterface *FaceLocation(int locationIndex);  
+CommandInterface *RamForward(double percentage, double duration, bool intaking);  
+
+CommandInterface *CollectCubes(double timeDuration);   
+
+CommandInterface *Score(Goal_Pos pos, double timeDuration); 
+
+CommandInterface *EnableMatchloader(bool out);  
+
+
+CommandInterface *Wait(double duration);   
+
+CommandInterface *SetRobotState(string key, bool val); 
+ 
 
 
 

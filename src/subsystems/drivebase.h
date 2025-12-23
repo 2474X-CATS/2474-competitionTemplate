@@ -50,9 +50,6 @@ private:
 
   static Location *locations[]; 
   
-  /*
-  USED FOR FINDING FEED FORWARD VALUES
-  */ 
 
 protected:
   using Subsystem::set;
