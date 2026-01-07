@@ -77,14 +77,7 @@ int main()
   RobotState::manuallyModifyState("is_team_color_blue", true);
   RobotState::manuallyModifyState("color_sensitive", false); 
   
-  freeDrive(); 
+  freeDrive();
   
-  /*
-  driveCommandMatch( 
-    { 
-       DrivePath::getCommand({TILE_SIZE_MM}, false, false)
-    } 
-  ); 
-  */
 
 }

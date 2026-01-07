@@ -12,7 +12,7 @@ vex::brain Brain;
 //-------
 // Constants: PLACE HERE [regularly]
 
-double ROBOT_WIDTH_MM = 406.4;    // mm
+double ROBOT_WIDTH_MM = 406.4;// mm
 double ROBOT_LENGTH_MM = 381; // mm 
 
 double MOTOR_TEMP_LIMIT_CELSIUS = 55.0;

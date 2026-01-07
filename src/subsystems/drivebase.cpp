@@ -127,11 +127,11 @@ void Drivebase::init()
    }
    
    //------------------------------
-   turnPID.P = 2.8;
-   turnPID.I = 1;
-   turnPID.D = 0.05;
-   turnPID.iLimit = 2;
-   turnPID.errorTolerance = 0.25; 
+   turnPID.P = 0.5;
+   turnPID.I = 0;
+   turnPID.D = 0;
+   turnPID.iLimit = 0;
+   turnPID.errorTolerance = 1; 
    //--------------------------  
  
    trapConsts.maxVelocity = 2750;  
@@ -156,7 +156,7 @@ void Drivebase::updateTelemetry()
    
    double currentAngle; 
    //currentAngle = 90 - fmod((encoderAngular.position(vex::rotationUnits::rev) * 2 * ENCODER_WHEEL_ROT_RADIUS_MM * M_PI) / (2 * ENCODER_DIST_FROM_CENTER * M_PI) * 360, 360);  
-   currentAngle = fmod((90 - driveGyro.angle(vex::rotationUnits::deg)) + 360, 360); 
+   currentAngle = 90 - driveGyro.angle(vex::rotationUnits::deg);
 
    if (RobotState::getStateOf("is_drive_inverted")){ 
       currentAngle += 180;
@@ -172,7 +172,7 @@ void Drivebase::updateTelemetry()
    set<double>("Angle_Degrees_CCW", currentAngle); 
    
    double hypotenuse; 
-   hypotenuse = -((encoderLinear.velocity(vex::velocityUnits::rpm) * 2 * M_PI * ENCODER_WHEEL_LIN_RADIUS_MM) / 3000); 
+   hypotenuse = ((encoderLinear.velocity(vex::velocityUnits::rpm) * 2 * M_PI * ENCODER_WHEEL_LIN_RADIUS_MM) / 3000); 
 
    if (RobotState::getStateOf("is_drive_inverted")){ 
       hypotenuse *= -1;
@@ -262,8 +262,8 @@ void Drivebase::voltageDriveForward(double volts)
       volts *= -1; 
    }
    volts = volts > 12.0 ? 12.0 : (volts < -12.0 ? -12.0 : volts);
-   leftDriveMotors.setVelocity((volts / 12.0) * 100.0, vex::velocityUnits::pct);
-   rightDriveMotors.setVelocity(-(volts / 12.0) * 100.0, vex::velocityUnits::pct);
+   leftDriveMotors.setVelocity(volts, vex::voltageUnits::volt);
+   rightDriveMotors.setVelocity(-volts, vex::voltageUnits::volt);
    leftDriveMotors.spin(vex::directionType::fwd);
    rightDriveMotors.spin(vex::directionType::fwd); 
 };

@@ -22,10 +22,10 @@ void Indexer::periodic(){
      indexerMotor.spin(vex::directionType::fwd);
    }  
 
-   if (RobotState::getStateOf("scoring_mid")){ 
-     indexerHatch.open();
-   } else { 
+   if (RobotState::getStateOf("scoring_high")){ 
      indexerHatch.close();
+   } else { 
+     indexerHatch.open();
    }  
 
 } 
