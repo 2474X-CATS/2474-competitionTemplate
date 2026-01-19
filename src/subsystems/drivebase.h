@@ -11,13 +11,26 @@
 #include "vex.h"
 
 
-typedef enum { 
-  LEFT, 
-  RIGHT, 
-  DOWN, 
-  UP, 
+typedef enum {  
+
+  LEFT_WALL, 
+  RIGHT_WALL, 
+  DOWN_WALL, 
+  UP_WALL,   
+
+  NEARBY_HIGH_LEFT, 
+  NEARBY_HIGH_RIGHT, 
+  FOREIGN_HIGH_LEFT, 
+  FOREIGN_HIGH_RIGHT,  
+
+  NEARBY_MID, 
+  NEARBY_LOW, 
+  FOREIGN_MID, 
+  FOREIGN_LOW, 
+
   NONE
-} Field_Wall; 
+
+} Alignment_Structure;
 
 class Drivebase : public Subsystem
 {
@@ -54,14 +67,14 @@ private:
   double angleOffset = 0;
 
   double lastTimestamp = 0;  
+  
+  Alignment_Structure calibratingWall = Alignment_Structure::NONE;
 
-  Field_Wall calibratingWall = Field_Wall::NONE;
+  static Location *locations[];    
+  static double MID_ALIGNER_LENGTH; 
+  static double HIGH_ALIGNER_LENGTH;
 
-  static Location *locations[];   
-
-  void calibrate(Field_Wall wall);  
-  void updateOffset(double desiredAngle);
-  double calculateAngle();
+  void calibrate(Alignment_Structure struc);  
 
 protected:
   using Subsystem::set;
@@ -82,13 +95,13 @@ public:
                                               }), 
                                           encoderLinear(vex::rotation(vex::PORT9)),
                                           encoderAngular(vex::rotation(vex::PORT10)),  
-                                          driveGyro(vex::inertial(vex::PORT18)),
+                                          driveGyro(vex::inertial(vex::PORT16)),
                                           driveFrontLeft(vex::motor(vex::PORT1, vex::ratio6_1)),
                                           driveMidLeft(vex::motor(vex::PORT2, vex::ratio6_1, true)),
                                           driveBackLeft(vex::motor(vex::PORT3, vex::ratio6_1)),  
                                           driveFrontRight(vex::motor(vex::PORT4, vex::ratio6_1)), 
                                           driveMidRight(vex::motor(vex::PORT5, vex::ratio6_1, true)),
-                                          driveBackRight(vex::motor(vex::PORT6, vex::ratio6_1)),
+                                          driveBackRight(vex::motor(vex::PORT15, vex::ratio6_1)),
                                           leftDriveMotors(vex::motor_group(driveFrontLeft, driveMidLeft, driveBackLeft)),
                                           rightDriveMotors(vex::motor_group(driveFrontRight, driveMidRight, driveBackRight)), 
                                         
@@ -111,12 +124,12 @@ public:
   void voltageDriveForward(double volts); 
   void voltageTurnClockwise(double volts);  
   
-  void setCalibratingWall(Field_Wall wall);
+  void setCalibratingStructure(Alignment_Structure struc);  
+
+  void setStartingPos(double x, double y);
   
   static Location *getLocation(int index);
-
   PIDConstants getTurningPID();
-
   TrapezoidConstants getMotionConstants();  
   
 };

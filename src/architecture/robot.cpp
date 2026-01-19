@@ -96,7 +96,8 @@ void Robot::registerSystemSubtables()
 
 void Robot::driverControl()
 { 
-  RobotState::setMode(ControlType::DRIVER);
+  RobotState::setMode(ControlType::DRIVER); 
+  RobotState::manuallyModifyState("is_drive_inverted", true);
   double timestamp;
   timestamp = Brain.Timer.time();
   while (true)
@@ -143,6 +144,6 @@ void Robot::autonControl()
   {
     command->run();
   }  
-  RobotState::manuallyModifyState("in_autonomous", false);
+  RobotState::manuallyModifyState("in_autonomous", false); 
 
 };

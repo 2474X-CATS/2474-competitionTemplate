@@ -7,7 +7,6 @@
 class Intake : public Subsystem {  
 
    private:   
-    vex::pneumatics intakeStopper; 
     vex::motor intakeConveyor;
 
    public:  
@@ -20,10 +19,11 @@ class Intake : public Subsystem {
      Subsystem( 
         "intake", 
         { 
-            (EntrySet){"is_on", EntryType::BOOL}
+            (EntrySet){"is_on", EntryType::BOOL},  
+            (EntrySet){"mid_scoring_engaged", EntryType::BOOL},
+            (EntrySet){"last_engaged_millis", EntryType::DOUBLE}
         }
      ), 
-     intakeStopper(vex::pneumatics(Brain.ThreeWirePort.E)), 
      intakeConveyor(vex::motor(vex::PORT7))
      { 
        globalRef = this; 

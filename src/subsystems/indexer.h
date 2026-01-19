@@ -20,10 +20,11 @@ class Indexer : public Subsystem {
      Subsystem( 
         "indexer", 
         { 
-            (EntrySet){"is_on", EntryType::BOOL}
+            (EntrySet){"is_on", EntryType::BOOL}, 
+            (EntrySet){"last_long_goal_pressed", EntryType::DOUBLE}
         }
      ), 
-     indexerMotor(vex::motor(vex::PORT8)), 
+     indexerMotor(vex::motor(vex::PORT17)), 
      indexerHatch(vex::pneumatics(Brain.ThreeWirePort.F))
      { 
        globalRef = this; 

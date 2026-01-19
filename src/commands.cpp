@@ -143,12 +143,6 @@ void DrivePath::initializeTurn()
 void DrivePath::turn()
 {
     double output = turnPID->calculate(getAngularError(), Brain.Timer.time()); 
-    /*
-    if (isCounterClockwise)
-    {
-        output *= -1;
-    } 
-    */
     drivebaseRef.manualTurnClockwise(-output);
 }
 
@@ -158,7 +152,6 @@ double DrivePath::getAngularError()
     double angleSetpoint = setpoints.at(operationsIndex);
     
     double dist; 
-    //double dist = currentAngle > angleSetpoint ? (360 - currentAngle) + angleSetpoint : angleSetpoint - currentAngle;
     
     dist = angleSetpoint - currentAngle; 
     if (dist > 180){  
@@ -243,6 +236,15 @@ string TurnToSetpoint::repr(){
    return ss.str();
 }
 
+
+// 
+
+void CloseDistance::start(){ 
+   DriveToSetpoint::start();  
+   setpoints[1] = setpoints[1] - offset;
+   operationsIndex++;
+};   
+
 //--------------------------------------- 
 // DRIVES THE ROBOT FORWARD OR BACKWARD AT A CERTAIN SPEED PERCENTAGE
 
@@ -254,7 +256,7 @@ void DriveForwardForTime::start()
 
 void DriveForwardForTime::periodic()
 {
-    drivebaseRef.arcadeDrive(percentage * 100, 0);  
+    drivebaseRef.arcadeDrive(-percentage * 100, 0);  
     intakeRef.periodic();
 };
 
@@ -281,7 +283,7 @@ string DriveForwardForTime::repr(){
 void Calibrate::start()
 { 
     RobotState::manuallyModifyState("calibrating", true); //Asuume facing somewhat towards wall
-    drivebaseRef.setCalibratingWall(wall);  
+    drivebaseRef.setCalibratingStructure(wall);  
     startingTime = Brain.Timer.time(vex::msec);
 };
 
@@ -495,4 +497,17 @@ CommandInterface* DriveToLocation(int zoneIndex, double dist, PathType pathType,
 CommandInterface* TurnToLocation(int zoneIndex){ 
   std::array<double, 2> setpoint = Drivebase::globalRef->getLocation(zoneIndex)->getProjectedSetpoint(0); 
   return TurnToSetpoint::getCommand(setpoint[0], setpoint[1]);
-}
+}  
+
+CommandInterface* TurnToLocation(int zoneIndex, double dist){ 
+  std::array<double, 2> setpoint = Drivebase::globalRef->getLocation(zoneIndex)->getProjectedSetpoint(dist); 
+  return TurnToSetpoint::getCommand(setpoint[0], setpoint[1]);
+};
+
+CommandInterface* CloseDistanceBetween(int zoneIndex, double dist, double offset, bool intaking){
+  std::array<double, 2> setpoint = Drivebase::globalRef->getLocation(zoneIndex)->getProjectedSetpoint(dist);  
+  return CloseDistance::getCommand(setpoint[0], setpoint[1], intaking, offset);
+};
+
+
+

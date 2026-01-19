@@ -18,19 +18,19 @@ typedef enum
 typedef enum
 {
   NAT_ML_LEFT = 0,
-  NAT_ML_RIGHT,
-  NAT_HIGH_LEFT,
-  NAT_HIGH_RIGHT,
-  NAT_MID,
-  NAT_LOW,
-  NAT_PARK,
-  FAR_ML_RIGHT,
-  FAR_ML_LEFT,
-  FAR_HIGH_LEFT,
-  FAR_HIGH_RIGHT,
-  FAR_MID,
-  FAR_LOW,
-  FAR_PARK
+  NAT_ML_RIGHT = 1,
+  NAT_HIGH_LEFT = 2,
+  NAT_HIGH_RIGHT = 3,
+  NAT_MID = 4,
+  NAT_LOW = 5,
+  NAT_PARK = 6,
+  FAR_ML_RIGHT = 7,
+  FAR_ML_LEFT = 8,
+  FAR_HIGH_LEFT = 9,
+  FAR_HIGH_RIGHT = 10,
+  FAR_MID = 11,
+  FAR_LOW = 12,
+  FAR_PARK = 13
 } Zones;
 
 typedef enum
@@ -153,6 +153,27 @@ public:
 protected:
   void start() override; 
   string repr() override; 
+};   
+
+class CloseDistance : DriveToSetpoint
+{
+
+private: 
+  double offset; 
+public: 
+
+  static CommandInterface *getCommand(double setpointX, double setpointY, double intaking, double offset)
+  {
+    return new CloseDistance(*Drivebase::globalRef, *Intake::globalRef, setpointX, setpointY, intaking, offset);
+  }
+
+  CloseDistance(Drivebase &drive, Intake &intake, double setpointX, double setpointY, bool intaking, double offset) : 
+   DriveToSetpoint(drive, intake, setpointX, setpointY, -1, PathType::EUCLIDEAN, intaking), 
+   offset(offset)
+   {};
+                                                                                                                                                                              
+protected:
+  void start() override; 
 };  
 
 //--------------------------------------- 
@@ -205,7 +226,7 @@ private:
   double percentage;   
   double durationMilliseconds;
   double startingTime;
-  Field_Wall wall;
+  Alignment_Structure wall;
 
 protected:
   void start() override;
@@ -214,12 +235,12 @@ protected:
   void end() override; 
 
 public:
-  static CommandInterface *getCommand(Field_Wall wall, double percentageOutput, double durationMillis)
+  static CommandInterface *getCommand(Alignment_Structure wall, double percentageOutput, double durationMillis)
   {
     return new Calibrate(*Drivebase::globalRef, wall, percentageOutput, durationMillis);
   }
 
-  Calibrate(Drivebase &drivebase, Field_Wall wall, double percentageOutput, double durationMillis) :  
+  Calibrate(Drivebase &drivebase, Alignment_Structure wall, double percentageOutput, double durationMillis) :  
                                                                                       Command<Drivebase>(drivebase),  
                                                                                       drivebaseRef(drivebase),  
                                                                                       percentage(percentageOutput),  
@@ -389,9 +410,12 @@ protected:
   string repr() override; 
 };
 
-CommandInterface* DriveToLocation(int zoneIndex, double dist, PathType pathType, bool intaking);
+CommandInterface* DriveToLocation(int zoneIndex, double dist, PathType pathType, bool intaking); 
 
-CommandInterface* TurnToLocation(int zoneIndex);
+CommandInterface* TurnToLocation(int zoneIndex); 
+CommandInterface* TurnToLocation(int zoneIndex, double dist); 
+
+CommandInterface* CloseDistanceBetween(int zoneIndex, double dist, double offset, bool intaking);
 
 
 #endif

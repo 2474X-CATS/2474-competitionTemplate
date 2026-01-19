@@ -24,21 +24,24 @@ void Indexer::periodic(){
    } else { 
      indexerMotor.setVelocity(0, vex::percentUnits::pct); 
      indexerMotor.spin(vex::directionType::fwd);
-   }  
-   if (RobotState::getStateOf("scoring_high")){ 
-     indexerHatch.close();
-   } else { 
+   }   
+
+   if (RobotState::getStateOf("scoring_high") && Brain.Timer.time(vex::msec) - get<double>("last_long_goal_pressed") <= 1000){ 
      indexerHatch.open();
+   } else { 
+     indexerHatch.close();
    }  
 
 } 
 
 void Indexer::updateTelemetry(){ 
-   return;
+   if (RobotState::getStateOf("scoring_high")){ 
+    set<double>("last_long_goal_pressed", Brain.Timer.time(vex::msec));
+   }
 } 
 
 void Indexer::stop(){  
    indexerMotor.setVelocity(0, vex::percentUnits::pct); 
    indexerMotor.spin(vex::directionType::fwd);
-   indexerHatch.open();
+   indexerHatch.close();
 }

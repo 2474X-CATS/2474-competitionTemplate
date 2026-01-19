@@ -91,7 +91,6 @@ void RobotState::initializeState()
         (EntrySet){"scoring_mid", EntryType::BOOL},
         (EntrySet){"scoring_low", EntryType::BOOL}, 
         (EntrySet){"matchloader_out", EntryType::BOOL},
-        (EntrySet){"k_descore_held", EntryType::BOOL},
         (EntrySet){"descore_out", EntryType::BOOL},   
 
         (EntrySet){"is_team_color_blue", EntryType::BOOL},  
@@ -132,14 +131,7 @@ void RobotState::updateRegular()
       }
    } 
    
-   if (Controller.ButtonL1.pressing()){ 
-      manuallyModifyState("k_descore_held", true);  
-   } else { 
-      if (getStateOf("k_descore_held")){ 
-         manuallyModifyState("k_descore_held", false); 
-         manuallyModifyState("descore_out", !getStateOf("descore_out")); 
-      }
-   }  
+   manuallyModifyState("descore_out", Controller.ButtonL1.pressing()); 
 
    if (Controller.ButtonX.pressing()){ 
       manuallyModifyState("k_double_park_held", true);  
@@ -162,8 +154,8 @@ void RobotState::updateStopped()
 
    manuallyModifyState("matchloader_out", false); 
    
-   manuallyModifyState("k_inversion_held", false);   
-   manuallyModifyState("k_descore_held", false);
+   manuallyModifyState("k_inversion_held", false);    
+   
    manuallyModifyState("descore_out", false); 
 
    manuallyModifyState("intaking", false); 
