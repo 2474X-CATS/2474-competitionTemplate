@@ -1,6 +1,16 @@
 #include "graphics.h" 
 #include <array> 
 
+
+typedef struct { 
+  std::string name; 
+  std::string description; 
+  int index; 
+  bool hasLeftSide; 
+  bool hasRightSide; 
+} AutonOption; 
+ 
+
 class ColorPicker : public Sprite {  
    private:
      bool isBlue = true;
@@ -9,7 +19,7 @@ class ColorPicker : public Sprite {
      bool getIsBlue(); 
 
      ColorPicker(int x, int y): 
-                   Sprite(x, y, 120, 25){};   
+                   Sprite(x, y, 100, 25){};   
      
      void draw() override;  
      void update() override; 
@@ -21,7 +31,7 @@ class ExitBlock : public Sprite {
 
     public: 
       ExitBlock(int x, int y) : 
-      Sprite(x,y,125, 50){}; 
+      Sprite(x,y,100, 50){}; 
 
       void draw() override;  
 
@@ -39,7 +49,7 @@ class SidePicker : public Sprite {
       bool getIsLeft();  
 
       SidePicker(int x, int y): 
-         Sprite(x, y, 120, 25){};   
+         Sprite(x, y, 100, 25){};   
     
       void draw() override;  
       void update() override; 
@@ -59,7 +69,43 @@ class LoadingScreen : public Sprite {
       void update() override; 
       void mousePressed(int mx, int my) override; 
       void mouseReleased() override;
-        
-}; 
+};  
+
+//----------------------------------------------------  
+
+class RoutineCatalog : public Sprite { 
+   private:  
+
+     int chosenIndex; 
+     std::vector<AutonOption> autos;  
+    
+   public: 
+     RoutineCatalog(int x, int y, std::vector<AutonOption> autosShell); 
+
+     void draw() override; 
+     void update() override; 
+     void mousePressed(int mx, int my) override;   
+     void mouseReleased() override;   
+
+     void renderCell(AutonOption option, int yPos); 
+
+     AutonOption getCurrentAuto();  
+     int getAutonIndex();
+};
+ 
+
+class AutonDisplay : public Sprite {   
+    private:  
+      RoutineCatalog* catalog;   
+      SidePicker* sidePicker;
+    public: 
+      AutonDisplay(int x, int y, RoutineCatalog* catalog, SidePicker* sidePicker); 
+      
+      void draw() override; 
+      void update() override; 
+      void mousePressed(int mx, int my) override;  
+      void mouseReleased() override;  
+      
+};
 
 

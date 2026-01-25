@@ -135,14 +135,14 @@ void Drivebase::init()
    //------------------------------ 
 
    turnPID.P = 2.5; 
-   turnPID.I = 0.5;
+   turnPID.I = 0.7;
    turnPID.D = 0.0; 
    turnPID.errorTolerance = 1;
    
    //--------------------------  >
  
    trapConsts.maxVelocity = 1234;  
-   trapConsts.maxAcceleration = 1234 * (5/3);     
+   trapConsts.maxAcceleration = 1234 * 1.6;     
    //-------------------------- 
    
    setStartingPos(startX, startY);
@@ -163,7 +163,7 @@ void Drivebase::updateTelemetry()
    double y = get<double>("Pos_Y"); 
    
    double angle; 
-   angle = driveGyro.angle(vex::rotationUnits::deg);  
+   angle = driveGyro.angle(vex::rotationUnits::deg);    
 
    if (RobotState::getStateOf("is_drive_inverted")){ 
       angle += 180;
@@ -187,8 +187,13 @@ void Drivebase::updateTelemetry()
       } 
 
       double angleRadians = angle * (2 * M_PI) / 360;
-
-      x += (hypotenuse * cos(angleRadians));
+      
+      if (RobotState::getStateOf("is_counterclockwise")){ 
+         x += (hypotenuse * cos(angleRadians));
+      } else { 
+         x -= (hypotenuse * cos(angleRadians)); 
+      } 
+      
       y += (hypotenuse * sin(angleRadians)); 
    }
      

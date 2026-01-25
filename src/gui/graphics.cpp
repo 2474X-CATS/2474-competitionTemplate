@@ -15,11 +15,13 @@ void drawLine(int x1, int y1, int x2, int y2, uint32_t color){
     Brain.Screen.drawLine(x1, y1, x2, y2); 
 };
 
+const char* stringFormatCode = "%s"; 
+
 void renderText(string text, int x, int y, uint32_t penColor, uint32_t highlightColor, vex::fontType font){  
     Brain.Screen.setPenColor(penColor);  
     Brain.Screen.setFillColor(highlightColor);
-    Brain.Screen.setFont(font);
-    Brain.Screen.printAt(x, y, text.c_str()); 
+    Brain.Screen.setFont(font);  
+    Brain.Screen.printAt(x, y, text.c_str());
 };   
 
 int getMouseX(){ 
@@ -118,7 +120,7 @@ void Sprite::init()
 
 void Sprite::refreshBackground()
 {
-  Brain.Screen.clearScreen(BACKGROUND_COLOR);
+  Brain.Screen.clearScreen(globalColor.black);
 }
 
 void Sprite::redraw()
@@ -179,11 +181,10 @@ void Sprite::filterDead()
 void Sprite::frameLoop(){ 
    init();
    while (running){
-        refreshBackground();  
         redraw();  
         refreshSpriteLogic();  
         filterDead();
-        vex::wait(60, vex::msec);  
+        vex::wait(30, vex::msec);  
        } 
    Brain.Screen.clearScreen(); 
    allSprites.clear(); 
@@ -191,23 +192,5 @@ void Sprite::frameLoop(){
    Brain.Screen.released(nothingMethod); 
    running = true;
 }
-
-
-void ColoredBlock::draw(){ 
-  drawRectangle(x,y,width,height, color);
-} 
-
-void ColoredBlock::update(){ 
-  return;
-} 
-
-void ColoredBlock::mousePressed(int mx, int my){ 
-  color = globalColor.blue;
-} 
-
-void ColoredBlock::mouseReleased(){ 
-  color = globalColor.cyan;
-}; 
-
 
 

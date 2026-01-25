@@ -76,23 +76,6 @@ class Sprite {
 };  
 
 
-class ColoredBlock : public Sprite {  
-  private: 
-    uint32_t color = globalColor.cyan; 
-  public: 
-    ColoredBlock(int x, int y, int width, int height) : 
-    Sprite(x,y,width,height){}; 
-
-    void draw() override;  
-
-    void update() override; 
-
-    void mousePressed(int mx, int my) override; 
-
-    void mouseReleased() override;
-}; 
-
-
 
 
 #endif 

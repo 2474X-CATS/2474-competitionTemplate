@@ -91,7 +91,9 @@ protected:
   void end() override;  
   virtual string repr() override; 
 
-public:
+public: 
+  static bool isCounterClockwise;
+
   static CommandInterface *getCommand(vector<double> setpoints, bool turningFirst, bool intaking)
   {
     return new DrivePath(*Drivebase::globalRef, *Intake::globalRef, setpoints, turningFirst, intaking);

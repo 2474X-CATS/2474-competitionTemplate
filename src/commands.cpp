@@ -4,6 +4,8 @@
 //--------------------------------------- 
 // A COMBINATION OF DRIVING FORWARD AND TURNING COMMANDS 
 
+bool DrivePath::isCounterClockwise = false;
+
 void DrivePath::start()
 {
     return;
@@ -129,14 +131,28 @@ void DrivePath::initializeTurn()
 
 void DrivePath::turn()
 {
-    double output = turnPID->calculate(getAngularError(), Brain.Timer.time()); 
-    drivebaseRef.manualTurnClockwise(-output);
+    double output = turnPID->calculate(getAngularError(), Brain.Timer.time());  
+    
+    if (RobotState::getStateOf("is_counterclockwise"))
+      drivebaseRef.manualTurnClockwise(-output); 
+    else { 
+      drivebaseRef.manualTurnClockwise(output);
+    }
 }
 
 double DrivePath::getAngularError()
-{
-    double currentAngle = drivebaseRef.get<double>("Angle_Degrees_CCW");
-    double angleSetpoint = setpoints.at(operationsIndex);
+{  
+
+    double currentAngle = drivebaseRef.get<double>("Angle_Degrees_CCW");   
+
+    double angleSetpoint = setpoints.at(operationsIndex); 
+
+    if (!RobotState::getStateOf("is_counterclockwise")){ 
+        double distFromInflection = 90 - angleSetpoint;  
+        angleSetpoint += distFromInflection * 2;  
+        angleSetpoint += 360; 
+        angleSetpoint = fmod(angleSetpoint, 360);
+    }
     
     double dist; 
     
@@ -171,7 +187,7 @@ void DriveToSetpoint::start()
 
     double overallDist = hypot(startingX - setpointX, startingY - setpointY); 
     
-    double overallAngle = fmod((atan2(startingY - setpointY, startingX - setpointX) / M_PI * 180 + 180), 360);
+    double overallAngle = fmod((atan2(startingY - setpointY, startingX - setpointX) / M_PI * 180 + 180), 360); 
 
     double xDist = setpointX - startingX;
     double yDist = setpointY - startingY;
@@ -222,7 +238,6 @@ string TurnToSetpoint::repr(){
    ss << "Face " << setpointX << "," << setpointY;
    return ss.str();
 }
-
 
 // 
 
