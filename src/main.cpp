@@ -2,7 +2,6 @@
 #include "architecture/robot.h"
 #include <iostream>
 
-#include "subsystems/hooks.h"
 #include "commands.h"
 #include "gui/autonInit.h"
 
@@ -156,7 +155,8 @@ vector<CommandInterface *> closed_side_left()
       ModifyRobotState::getCommand("is_drive_inverted", true),
 
       TurnToLocation(Zones::NAT_MID),
-      DrivePath::getCommand({TILE_SIZE_MM * 0.65}, false, false),
+      DrivePath::getCommand({TILE_SIZE_MM * 0.65}, false, false), 
+      Calibrate::getCommand(Alignment_Structure::NEARBY_MID, 0,0),
       ScoreOnGoal::getCommand(Goal_Pos::MID_GOAL, 2000),
       ModifyRobotState::getCommand("is_drive_inverted", false),
 
@@ -170,7 +170,9 @@ vector<CommandInterface *> closed_side_left()
 
       TurnToLocation(Zones::NAT_HIGH_LEFT),
       CloseDistanceBetween(Zones::NAT_HIGH_LEFT, ROBOT_LENGTH_MM / 2 - 100, 0, true),
-      ScoreOnGoal::getCommand(Goal_Pos::HIGH_GOAL, 1000)};
+      ScoreOnGoal::getCommand(Goal_Pos::HIGH_GOAL, 1000) 
+    
+    };
 }
 
 vector<CommandInterface *> closed_side_right()
@@ -180,17 +182,22 @@ vector<CommandInterface *> closed_side_right()
       CloseDistanceBetween(Zones::NAT_LOW, TILE_SIZE_MM * 0.875, 250, true),
       DeployMatchloader::getCommand(true),
       DriveForwardForTime::getCommand(0.4, 500, true),
-      IntakeCubes::getCommand(500),
+      IntakeCubes::getCommand(500), 
+      
       DriveToLocation(Zones::NAT_ML_RIGHT, TILE_SIZE_MM * 0.925, PathType::EUCLIDEAN, false),
       TurnToLocation(Zones::NAT_ML_RIGHT),
       DriveForwardForTime::getCommand(0.25, 500, true),
-      IntakeCubes::getCommand(750),
+      IntakeCubes::getCommand(750), 
+
       ModifyRobotState::getCommand("is_drive_inverted", true),
       DrivePath::getCommand({100}, false, false),
       DriveToLocation(Zones::NAT_HIGH_RIGHT, ROBOT_LENGTH_MM / 2 - 100, PathType::EUCLIDEAN, false),
-      ScoreOnGoal::getCommand(Goal_Pos::HIGH_GOAL, 3000),
-      DrivePath::getCommand({-300, 0, ROBOT_LENGTH_MM / 2 + 100, 90}, false, false),
-      DriveForwardForTime::getCommand(0.25, 1500, false)};
+      ScoreOnGoal::getCommand(Goal_Pos::HIGH_GOAL, 3000), 
+
+      DrivePath::getCommand({-300, 0, ROBOT_LENGTH_MM / 2 + 100, 90}, false, false), 
+      DeployDescore::getCommand(true),
+      DriveForwardForTime::getCommand(0.25, 1500, false) 
+    };
 }
 
 vector<CommandInterface *> auto_skills()

@@ -4,7 +4,8 @@
 #include "subsystems/drivebase.h"  
 #include "subsystems/intake.h" 
 #include "subsystems/indexer.h"
-#include "subsystems/matchloader.h" 
+#include "subsystems/matchloader.h"  
+#include "subsystems/hooks.h"
 #include "architecture/command.h" 
 
 
@@ -92,7 +93,7 @@ protected:
   virtual string repr() override; 
 
 public: 
-  static bool isCounterClockwise;
+  //static bool isCounterClockwise;
 
   static CommandInterface *getCommand(vector<double> setpoints, bool turningFirst, bool intaking)
   {
@@ -350,7 +351,34 @@ public:
                                                           isOut(out) {};
 
   ~DeployMatchloader() override = default;
-};
+};  
+
+class DeployDescore : Command<Hooks>
+{
+private:
+  Hooks &hooksRef;
+  bool isOut;
+  bool ran = false;
+
+protected:
+  void start() override;
+  void periodic() override;
+  bool isOver() override;
+  void end() override;  
+
+public:
+  static CommandInterface *getCommand(bool out)
+  {
+    return new DeployDescore(*Hooks::globalRef, out);
+  }
+
+  DeployDescore(Hooks &hooks, bool out) : Command<Hooks>(hooks),
+                                                          hooksRef(hooks),
+                                                          isOut(out) {};
+
+  ~DeployDescore() override = default;
+}; 
+
 
 
 //--------------------------------------- 

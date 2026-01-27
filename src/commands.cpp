@@ -4,7 +4,7 @@
 //--------------------------------------- 
 // A COMBINATION OF DRIVING FORWARD AND TURNING COMMANDS 
 
-bool DrivePath::isCounterClockwise = false;
+//bool DrivePath::isCounterClockwise = false;
 
 void DrivePath::start()
 {
@@ -428,7 +428,30 @@ string DeployMatchloader::repr(){
    stringstream ss;  
    ss << "ML" << "," << isOut; 
    return ss.str(); 
-};
+}; 
+
+// EXTENDS OR RETRACTS THE DESCORE MECHANISM
+
+void DeployDescore::start()
+{
+    RobotState::manuallyModifyState("descore_out", isOut);
+}
+
+void DeployDescore::periodic()
+{
+    hooksRef.periodic();
+    ran = true;
+}
+
+bool DeployDescore::isOver()
+{
+    return ran;
+}
+
+void DeployDescore::end()
+{
+    return;
+} 
 
 
 //--------------------------------------- 

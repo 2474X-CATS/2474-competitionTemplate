@@ -16,5 +16,5 @@ void Hooks::updateTelemetry(){
 } 
 
 void Hooks::stop(){ 
-   hookPiston.set(false);
+   hookPiston.set(true);
 }

@@ -229,7 +229,6 @@ void Drivebase::updateTelemetry()
    
 };
 
-
 Location *Drivebase::getLocation(int index)
 {
    return Drivebase::locations[index];
