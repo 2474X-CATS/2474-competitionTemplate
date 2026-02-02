@@ -23,7 +23,7 @@ Telemetry Layer — centralized diagnostics and sensor reporting.
 Utilities — helpers like Location for field positioning.
 
 📁 File Structure<br/>
-src/ 
+src/ <br/>
 ├── main.cpp<br/>
 ├── commands.cpp / commands.h  # Command manager and registry <br/>
 ├── architecture/
