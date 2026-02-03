@@ -116,7 +116,8 @@ public:
 
   void arcadeDrive(double speed, double rotation); 
 
-  void manualDriveForward(double speedMM);
+  void manualDriveForward(double speedMM); 
+  void manualPercentageDrive(double decimal);
   void manualTurnClockwise(double turnDeg); 
   
   void voltageDriveForward(double volts); 

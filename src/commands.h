@@ -183,7 +183,7 @@ public:
   } 
 
   SlantedAlignWithY(Drivebase &drive, Intake &intake, double setpointY) : 
-  DrivePath({}, false, false), 
+  DrivePath(drive, intake, {}, false, false), 
   setpointY(setpointY){}
                                                                                                                  
   void start() override; 
@@ -196,11 +196,11 @@ private:
 public:
   static CommandInterface *getCommand(double setpointX)
   {
-    return new SlantAlignWithX(*Drivebase::globalRef, *Intake::globalRef, setpointX);
+    return new SlantedAlignWithX(*Drivebase::globalRef, *Intake::globalRef, setpointX);
   } 
 
   SlantedAlignWithX(Drivebase &drive, Intake &intake, double setpointX) : 
-  DrivePath({}, false, false), 
+  DrivePath(drive, intake, {}, false, false), 
   setpointX(setpointX) {}
                                                                                                                  
   void start() override; 

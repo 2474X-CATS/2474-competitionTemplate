@@ -269,6 +269,16 @@ void Drivebase::manualDriveForward(double speedMM)
    rightDriveMotors.spin(vex::directionType::fwd); 
 };
 
+void Drivebase::manualPercentageDrive(double decimal){ 
+   if (!RobotState::getStateOf("is_drive_inverted")){ 
+      decimal *= -1;
+   }
+   leftDriveMotors.setVelocity(decimal, vex::velocityUnits::pct);
+   rightDriveMotors.setVelocity(decimal, vex::velocityUnits::pct);
+   leftDriveMotors.spin(vex::directionType::rev);
+   rightDriveMotors.spin(vex::directionType::fwd);
+}
+
 void Drivebase::manualTurnClockwise(double turnDeg)
 { 
    double rotationsPerMinutes = (((ROBOT_WIDTH_MM * M_PI) * (turnDeg / 360.0)) / (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI)) * 60;  

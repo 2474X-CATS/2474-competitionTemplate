@@ -283,42 +283,20 @@ void FlatAlignWithY::start(){
 // 
 
 void SlantedAlignWithX::start(){   
-
    double heading = drivebaseRef.get<double>("Angle_Degrees_CCW") / 360.0 * (2 * M_PI);  
-
    double xPos = drivebaseRef.get<double>("Pos_X"); 
-  
    double xDiff = setpointX - xPos;  
-   double yDiff = xDiff * tan(heading); 
-   
-   double dist = sqrt(pow(xDiff, 2) + pow(yDiff, 2)); 
-
-   if (copysign(1, cos(heading)) != copysign(1, xDiff)){ 
-    dist *= -1;
-   }
-
+   double dist = xDiff / cos(heading);
    setpoints.push_back(dist);
-
    numOfOperations += 1;
 }  
 
 void SlantedAlignWithY::start(){   
-
    double heading = drivebaseRef.get<double>("Angle_Degrees_CCW") / 360.0 * (2 * M_PI);  
-
    double yPos = drivebaseRef.get<double>("Pos_Y");  
-
    double yDiff = setpointY - yPos;  
-   double xDiff = yDiff / tan(heading); 
-   
-   double dist = sqrt(pow(xDiff, 2) + pow(yDiff, 2)); 
-
-   if (copysign(1, sin(heading)) != copysign(1, yDiff)){ 
-    dist *= -1;
-   }
-
+   double dist = yDiff / sin(heading); 
    setpoints.push_back(dist);
-
    numOfOperations += 1;
 } 
 
@@ -337,15 +315,11 @@ void DriveForwardForTime::start()
 { 
     RobotState::manuallyModifyState("intaking", intaking);
     startingTime = Brain.Timer.time(vex::msec);     
-
-    if (RobotState::getStateOf("is_drive_inverted")){ 
-       percentage *= -1;
-    }
 };
 
 void DriveForwardForTime::periodic()
 {
-    drivebaseRef.arcadeDrive(-percentage * 100, 0);  
+    drivebaseRef.manualPercentageDrive(percentage * 100);  
     intakeRef.periodic();
 };
 
@@ -374,14 +348,12 @@ void Calibrate::start()
     RobotState::manuallyModifyState("calibrating", true); //Asuume facing somewhat towards wall
     drivebaseRef.setCalibratingStructure(wall);  
     startingTime = Brain.Timer.time(vex::msec);   
-    if (RobotState::getStateOf("is_drive_inverted")){ 
-       percentage *= -1;
-    }
+    
 };
 
 void Calibrate::periodic()
 {
-    drivebaseRef.arcadeDrive(-percentage * 100, 0); 
+    drivebaseRef.manualPercentageDrive(percentage * 100);  
 };
 
 bool Calibrate::isOver()
@@ -524,7 +496,7 @@ string DeployMatchloader::repr(){
 
 void DeployDescore::start()
 {
-    RobotState::manuallyModifyState("descore_out", isOut);
+    RobotState::manuallyModifyState("descore_in", isOut);
 }
 
 void DeployDescore::periodic()
@@ -579,14 +551,11 @@ void DisengageHighGoal::start()
 { 
     RobotState::manuallyModifyState("scoring_high", true);
     startingTime = Brain.Timer.time(vex::msec);  
-    if (RobotState::getStateOf("is_drive_inverted")){ 
-       percentage *= -1;
-    }  
 };
 
 void DisengageHighGoal::periodic()
 {
-    drivebaseRef.arcadeDrive(percentage * 100, 0);  
+    drivebaseRef.manualPercentageDrive(-percentage * 100);  
     intakeRef.periodic(); 
     indexerRef.periodic();
 };
