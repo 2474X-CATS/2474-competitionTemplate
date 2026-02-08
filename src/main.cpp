@@ -160,19 +160,21 @@ vector<CommandInterface *> closed_side_left()
       //Calibrate::getCommand(Alignment_Structure::NEARBY_MID, 0, 0),
       ScoreOnGoal::getCommand(Goal_Pos::MID_GOAL, 2000), 
       DeployMatchloader::getCommand(true),  
-      SlantedAlignWithX::getCommand(TILE_SIZE_MM),  
+      SlantedAlignWithX::getCommand(TILE_SIZE_MM + 25),  
       ModifyRobotState::getCommand("is_drive_inverted", false), 
 
        
-      TurnToLocation(Zones::NAT_ML_LEFT), 
+      //TurnToLocation(Zones::NAT_ML_LEFT), 
+      DrivePath::getCommand({270}, true, false), 
       CloseDistanceBetween(Zones::NAT_ML_LEFT, ROBOT_LENGTH_MM/2+250, 0, true),
       DriveForwardForTime::getCommand(0.2, 400, true), 
       IntakeCubes::getCommand(625),   
       
       ModifyRobotState::getCommand("is_drive_inverted", true), 
-     
+       
+      TurnToLocation(Zones::NAT_HIGH_LEFT),
       CloseDistanceBetween(Zones::NAT_HIGH_LEFT, ROBOT_LENGTH_MM / 2, 0, true),  
-      Calibrate::getCommand(Alignment_Structure::NEARBY_HIGH_LEFT, 0.2, 450),
+      Calibrate::getCommand(Alignment_Structure::NEARBY_HIGH_LEFT, 0.2, 750),
       ScoreOnGoal::getCommand(Goal_Pos::HIGH_GOAL, 1250), 
       DisengageHighGoal::getCommand(0.2, 500),
       
@@ -232,9 +234,9 @@ vector<CommandInterface *> auto_skills()
       DriveForwardForTime::getCommand(0.2, 500, true),  
       IntakeCubes::getCommand(200), 
      
-      ModifyRobotState::getCommand("is_drive_inverted", true),
+      ModifyRobotState::getCommand("is_drive_inverted", true), 
       FlatAlignWithY::getCommand((TILE_SIZE_MM * 2) - (ROBOT_LENGTH_MM * 1.125)), 
-      FlatAlignWithX::getCommand(TILE_SIZE_MM * 5),
+      FlatAlignWithX::getCommand(TILE_SIZE_MM * 5+15),
       TurnToLocation(Zones::NAT_HIGH_RIGHT),
       CloseDistanceBetween(Zones::NAT_HIGH_RIGHT, ROBOT_LENGTH_MM / 2, 0, false),
       Calibrate::getCommand(Alignment_Structure::NEARBY_HIGH_RIGHT, 0.35, 1000),
@@ -244,20 +246,23 @@ vector<CommandInterface *> auto_skills()
       ModifyRobotState::getCommand("is_drive_inverted", false),
       DriveToLocation(Zones::NAT_ML_RIGHT, 475, PathType::EUCLIDEAN, false), // Matchload cubes from 4
       DriveForwardForTime::getCommand(0.2, 750, true),
-      IntakeCubes::getCommand(2000),
+      IntakeCubes::getCommand(2000), 
 
-      ModifyRobotState::getCommand("is_drive_inverted", true),
-      FlatAlignWithY::getCommand(TILE_SIZE_MM * 1.15),  
+      ModifyRobotState::getCommand("is_drive_inverted", true), 
+      DriveForwardForTime::getCommand(0.25, 500, false),
+      FlatAlignWithY::getCommand(TILE_SIZE_MM * 1.25),  
       DeployMatchloader::getCommand(false),
       FlatAlignWithX::getCommand(TILE_SIZE_MM * 4.25), 
       FlatAlignWithY::getCommand((TILE_SIZE_MM * 4) + (ROBOT_LENGTH_MM)), 
-      FlatAlignWithX::getCommand(TILE_SIZE_MM * 5), 
-      TurnToLocation(Zones::FAR_HIGH_RIGHT), 
+      FlatAlignWithX::getCommand(TILE_SIZE_MM * 5 - 25),  
+      
+      TurnToLocation(Zones::FAR_HIGH_RIGHT),  
       CloseDistanceBetween(Zones::FAR_HIGH_RIGHT, (ROBOT_LENGTH_MM/2), 0, false),
-      Calibrate::getCommand(Alignment_Structure::FOREIGN_HIGH_RIGHT, 0.45, 100),
-      ScoreOnGoal::getCommand(Goal_Pos::HIGH_GOAL, 1500),  
-      DisengageHighGoal::getCommand(0.2, 350),
+      Calibrate::getCommand(Alignment_Structure::FOREIGN_HIGH_RIGHT, 0.45, 1750),
+      ScoreOnGoal::getCommand(Goal_Pos::HIGH_GOAL, 1750),   
       DeployMatchloader::getCommand(true),
+      DisengageHighGoal::getCommand(0.2, 350),
+     
       
       ModifyRobotState::getCommand("is_drive_inverted", false),
       CloseDistanceBetween(Zones::FAR_ML_RIGHT, 475, 0, false), 
@@ -268,10 +273,26 @@ vector<CommandInterface *> auto_skills()
       CloseDistanceBetween(Zones::FAR_HIGH_RIGHT, ROBOT_LENGTH_MM/2, 0, false), 
       Calibrate::getCommand(Alignment_Structure::FOREIGN_HIGH_RIGHT, 0.25, 1000),
       ScoreOnGoal::getCommand(Goal_Pos::HIGH_GOAL, 1500), 
-      DisengageHighGoal::getCommand(0.2, 500),
+      DisengageHighGoal::getCommand(0.2, 500), 
       
-      FlatAlignWithY::getCommand(TILE_SIZE_MM * 4.5), 
-      FlatAlignWithX::getCommand(TILE_SIZE_MM),
+      
+      //--Temporary--  
+      /*
+      DeployMatchloader::getCommand(false),
+      FlatAlignWithY::getCommand(TILE_SIZE_MM * 4.75), 
+      FlatAlignWithX::getCommand(TILE_SIZE_MM * 4.25), 
+      FlatAlignWithY::getCommand(TILE_SIZE_MM * 1.5), 
+      FlatAlignWithX::getCommand(TILE_SIZE_MM * 3),    
+      ModifyRobotState::getCommand("is_drive_inverted", false),
+      TurnToLocation(Zones::NAT_PARK),
+      DriveForwardForTime::getCommand(1, 2000, true), 
+      */ 
+
+      //--Temporary-- 
+      
+      
+      FlatAlignWithY::getCommand(TILE_SIZE_MM * 4.75), 
+      FlatAlignWithX::getCommand(TILE_SIZE_MM+15),
       TurnToLocation(Zones::FAR_HIGH_LEFT),
       CloseDistanceBetween(Zones::FAR_HIGH_LEFT, ROBOT_LENGTH_MM/2, 0, false), 
       Calibrate::getCommand(Alignment_Structure::FOREIGN_HIGH_LEFT, 0.3, 1250),
@@ -281,11 +302,12 @@ vector<CommandInterface *> auto_skills()
       DriveForwardForTime::getCommand(0.2, 750, true),
       IntakeCubes::getCommand(1500),   
 
-      ModifyRobotState::getCommand("is_drive_inverted", true),  
+      ModifyRobotState::getCommand("is_drive_inverted", true),   
+      DriveForwardForTime::getCommand(0.3, 500, false),
       FlatAlignWithY::getCommand(TILE_SIZE_MM * 5), 
-      FlatAlignWithX::getCommand(TILE_SIZE_MM * 1.5), 
+      FlatAlignWithX::getCommand(TILE_SIZE_MM * 1.6), 
       FlatAlignWithY::getCommand(TILE_SIZE_MM + (ROBOT_LENGTH_MM/2)), 
-      FlatAlignWithX::getCommand(TILE_SIZE_MM), 
+      FlatAlignWithX::getCommand(TILE_SIZE_MM+15), 
       TurnToLocation(Zones::NAT_HIGH_LEFT), 
       CloseDistanceBetween(Zones::NAT_HIGH_LEFT, ROBOT_LENGTH_MM/2, 0, false),
       Calibrate::getCommand(Alignment_Structure::NEARBY_HIGH_LEFT, 0.25, 500),
@@ -304,14 +326,11 @@ vector<CommandInterface *> auto_skills()
       DisengageHighGoal::getCommand(0.2, 500),
       DeployMatchloader::getCommand(false), 
 
-      ModifyRobotState::getCommand("is_drive_inverted", false),
-      DriveToLocation(Zones::NAT_PARK, TILE_SIZE_MM, PathType::MANHATTAN_YX, false),  
-      FlatAlignWithY::getCommand(TILE_SIZE_MM * 1.33),  
-      FlatAlignWithX::getCommand(TILE_SIZE_MM * 3), 
+      ModifyRobotState::getCommand("is_drive_inverted", false),  
+      FlatAlignWithY::getCommand(TILE_SIZE_MM * 1.4),  
+      FlatAlignWithX::getCommand(TILE_SIZE_MM * 3 - 15), 
       TurnToLocation(Zones::NAT_PARK),
-
-      DriveForwardForTime::getCommand(-0.2, 500, false),
-      DriveForwardForTime::getCommand(1, 3000, true), 
+      DriveForwardForTime::getCommand(1, 2000, true), 
       
   };
 }
@@ -321,6 +340,11 @@ vector<CommandInterface*> empty(){
   };
 }
 
+vector<CommandInterface*> driveForward(){ 
+  return { 
+     DriveForwardForTime::getCommand(0.2, 500, false)
+  };
+}
 //-------------------------------------------------------------------------------------------------------------------------------------------------
 
 int main()
@@ -338,7 +362,7 @@ int main()
 
   robot.initialize();
 
-  RobotState::manuallyModifyState("color_sensitive", true); // <- We don't have color-sort
+  RobotState::manuallyModifyState("color_sensitive", false); // <- We don't have color-sort
   RobotState::manuallyModifyState("is_counterclockwise", false);
 
   //-------------------ROUTINE CREATION-------------------
@@ -355,21 +379,36 @@ int main()
            closed_side_right()
           } 
       } 
-  );  
+  );   
+
+  routines.push_back(  
+    (Routine){ 
+      "We are getting carried", 
+      "Our alliance has AWP go forward a smidge (or do nothing)", 
+      { 
+        empty(), 
+        empty()
+      } 
+    }
+  );
   
 
   //-----------------------PROTOCOL------------------------
 
 
- //startCommandCompetitiveMatch(routines);  
- /*
- testAuto( 
-  closed_side_right(), 
-  false
- ); 
- */ 
- testDrive();
-
+ //startCommandCompetitiveMatch(routines);   
  
-  
+ 
+ Drivebase::globalRef->setStartingPos((TILE_SIZE_MM * 3 + 200), 425); 
+ 
+ startCommandSkillsMatch( 
+    auto_skills()
+ );  
+ 
+
+ //startCommandCompetitiveMatch(routines);
+ 
+ 
+ 
+
 }

@@ -29,9 +29,9 @@ void Indexer::periodic(){
      indexerMotor.spin(vex::directionType::fwd); 
    } else if (RobotState::getStateOf("scoring_mid")){  
      if (RobotState::getStateOf("in_autonomous")){ 
-       indexerMotor.setVelocity(ABSOLUTE_INDEXER_SPEED * 0.25, vex::velocityUnits::rpm);
+       indexerMotor.setVelocity(ABSOLUTE_INDEXER_SPEED * 0.35, vex::velocityUnits::rpm);
      } else { 
-       indexerMotor.setVelocity(ABSOLUTE_INDEXER_SPEED * 0.5, vex::velocityUnits::rpm);
+       indexerMotor.setVelocity(ABSOLUTE_INDEXER_SPEED * 0.25, vex::velocityUnits::rpm);
      }
      indexerMotor.spin(vex::directionType::fwd);
    } else { 
