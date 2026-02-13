@@ -9,11 +9,14 @@ Drivebase *Drivebase::globalRef = nullptr;
 
 double Drivebase::ENCODER_WHEEL_ROT_RADIUS_MM = 69.85 / 2;  
 double Drivebase::ENCODER_WHEEL_LIN_RADIUS_MM = 25.4;  
-double Drivebase::ENCODER_DIST_FROM_CENTER = 91.3417; // 17.665
-double Drivebase::DRIVE_WHEEL_RADIUS_MM = 69.85 / 2; 
+double Drivebase::ENCODER_DIST_FROM_CENTER = 91.3417; 
+
+double Drivebase::DRIVE_WHEEL_RADIUS_MM = 3.25 * 25.4 / 2; //3.25in diam
 
 double Drivebase::MID_ALIGNER_LENGTH = 0; 
-double Drivebase::HIGH_ALIGNER_LENGTH = 0;
+double Drivebase::HIGH_ALIGNER_LENGTH = 0; 
+
+double Drivebase::MAX_RPM = 450;
 
 Location *Drivebase::locations[14] = {
     new Location(
@@ -141,8 +144,8 @@ void Drivebase::init()
    
    //--------------------------  >
  
-   trapConsts.maxVelocity = 1234;  
-   trapConsts.maxAcceleration = 1234 * 1.5;     
+   trapConsts.maxVelocity = (MAX_RPM * (2 * DRIVE_WHEEL_RADIUS_MM * M_PI)) / 60.0 * (MAX_RPM / 600.0);
+   trapConsts.maxAcceleration = trapConsts.maxVelocity / (0.5); // Reach max speed in 0.5 seconds  
    //-------------------------- 
    
    setStartingPos(startX, startY);
@@ -262,7 +265,7 @@ void Drivebase::manualDriveForward(double speedMM)
       speedMM *= -1; 
    }
    double netSpeed = speedMM / (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) * 60;  
-   netSpeed *= (4.0/3);   
+   netSpeed *= (600.0/MAX_RPM);   
    leftDriveMotors.setVelocity(netSpeed, vex::velocityUnits::rpm);
    rightDriveMotors.setVelocity(netSpeed, vex::velocityUnits::rpm);
    leftDriveMotors.spin(vex::directionType::rev);
@@ -399,7 +402,7 @@ void Drivebase::calibrate(Alignment_Structure struc){
       break;
    }   
    
-   supposedAngle = -1;
+   supposedAngle = -1; // Angle calibration is redundant mostly
 
    if (supposedAngle == -1){ 
       return; 

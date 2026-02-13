@@ -231,34 +231,36 @@ vector<CommandInterface *> auto_skills()
       TurnToLocation(Zones::NAT_LOW, TILE_SIZE_MM), 
       CloseDistanceBetween(Zones::NAT_LOW, TILE_SIZE_MM, ROBOT_LENGTH_MM/2, true),  
       DeployMatchloader::getCommand(true),
-      DriveForwardForTime::getCommand(0.2, 500, true),  
+      //DriveForwardForTime::getCommand(0.2, 500, true),   
+      DrivePath::getCommand({ROBOT_LENGTH_MM/2+100}, false, true),
       IntakeCubes::getCommand(200), 
      
       ModifyRobotState::getCommand("is_drive_inverted", true), 
       FlatAlignWithY::getCommand((TILE_SIZE_MM * 2) - (ROBOT_LENGTH_MM * 1.125)), 
       FlatAlignWithX::getCommand(TILE_SIZE_MM * 5+15),
       TurnToLocation(Zones::NAT_HIGH_RIGHT),
-      CloseDistanceBetween(Zones::NAT_HIGH_RIGHT, ROBOT_LENGTH_MM / 2, 0, false),
-      Calibrate::getCommand(Alignment_Structure::NEARBY_HIGH_RIGHT, 0.35, 1000),
+      CloseDistanceBetween(Zones::NAT_HIGH_RIGHT, ROBOT_LENGTH_MM / 2 - 100, 0, true),
+      Calibrate::getCommand(Alignment_Structure::NEARBY_HIGH_RIGHT, 0.35, 500),
       ScoreOnGoal::getCommand(Goal_Pos::HIGH_GOAL, 1500), 
       DisengageHighGoal::getCommand(0.2, 500), 
 
       ModifyRobotState::getCommand("is_drive_inverted", false),
-      DriveToLocation(Zones::NAT_ML_RIGHT, 475, PathType::EUCLIDEAN, false), // Matchload cubes from 4
-      DriveForwardForTime::getCommand(0.2, 750, true),
-      IntakeCubes::getCommand(2000), 
+      //DriveToLocation(Zones::NAT_ML_RIGHT, 475, PathType::EUCLIDEAN, false), // Matchload cubes from 4
+      CloseDistanceBetween(Zones::NAT_ML_RIGHT, 475, 0, false),
+      DriveForwardForTime::getCommand(0.2, 625, true),
+      IntakeCubes::getCommand(2100), 
 
       ModifyRobotState::getCommand("is_drive_inverted", true), 
       DriveForwardForTime::getCommand(0.25, 500, false),
-      FlatAlignWithY::getCommand(TILE_SIZE_MM * 1.25),  
+      //FlatAlignWithY::getCommand(TILE_SIZE_MM * 1.25),  
       DeployMatchloader::getCommand(false),
       FlatAlignWithX::getCommand(TILE_SIZE_MM * 4.25), 
-      FlatAlignWithY::getCommand((TILE_SIZE_MM * 4) + (ROBOT_LENGTH_MM)), 
-      FlatAlignWithX::getCommand(TILE_SIZE_MM * 5 - 25),  
+      FlatAlignWithY::getCommand((TILE_SIZE_MM * 4) + (ROBOT_LENGTH_MM/3*2)), 
+      FlatAlignWithX::getCommand(TILE_SIZE_MM * 5 - 40),  
       
-      TurnToLocation(Zones::FAR_HIGH_RIGHT),  
-      CloseDistanceBetween(Zones::FAR_HIGH_RIGHT, (ROBOT_LENGTH_MM/2), 0, false),
-      Calibrate::getCommand(Alignment_Structure::FOREIGN_HIGH_RIGHT, 0.45, 1750),
+      DrivePath::getCommand({270}, true, false),  
+      CloseDistanceBetween(Zones::FAR_HIGH_RIGHT, (ROBOT_LENGTH_MM/2), 0, true),
+      Calibrate::getCommand(Alignment_Structure::FOREIGN_HIGH_RIGHT, 0.45, 1000),
       ScoreOnGoal::getCommand(Goal_Pos::HIGH_GOAL, 1750),   
       DeployMatchloader::getCommand(true),
       DisengageHighGoal::getCommand(0.2, 350),
@@ -266,47 +268,30 @@ vector<CommandInterface *> auto_skills()
       
       ModifyRobotState::getCommand("is_drive_inverted", false),
       CloseDistanceBetween(Zones::FAR_ML_RIGHT, 475, 0, false), 
-      DriveForwardForTime::getCommand(0.2, 750, true),
+      DriveForwardForTime::getCommand(0.2, 500, true),
       IntakeCubes::getCommand(1500), 
 
       ModifyRobotState::getCommand("is_drive_inverted", true), 
-      CloseDistanceBetween(Zones::FAR_HIGH_RIGHT, ROBOT_LENGTH_MM/2, 0, false), 
+      CloseDistanceBetween(Zones::FAR_HIGH_RIGHT, ROBOT_LENGTH_MM/2, 0, true), 
       Calibrate::getCommand(Alignment_Structure::FOREIGN_HIGH_RIGHT, 0.25, 1000),
       ScoreOnGoal::getCommand(Goal_Pos::HIGH_GOAL, 1500), 
-      DisengageHighGoal::getCommand(0.2, 500), 
+      DisengageHighGoal::getCommand(0.2, 750), 
       
-      
-      //--Temporary--  
-      /*
-      DeployMatchloader::getCommand(false),
-      FlatAlignWithY::getCommand(TILE_SIZE_MM * 4.75), 
-      FlatAlignWithX::getCommand(TILE_SIZE_MM * 4.25), 
-      FlatAlignWithY::getCommand(TILE_SIZE_MM * 1.5), 
-      FlatAlignWithX::getCommand(TILE_SIZE_MM * 3),    
-      ModifyRobotState::getCommand("is_drive_inverted", false),
-      TurnToLocation(Zones::NAT_PARK),
-      DriveForwardForTime::getCommand(1, 2000, true), 
-      */ 
-
-      //--Temporary-- 
-      
-      
-      FlatAlignWithY::getCommand(TILE_SIZE_MM * 4.75), 
       FlatAlignWithX::getCommand(TILE_SIZE_MM+15),
       TurnToLocation(Zones::FAR_HIGH_LEFT),
       CloseDistanceBetween(Zones::FAR_HIGH_LEFT, ROBOT_LENGTH_MM/2, 0, false), 
-      Calibrate::getCommand(Alignment_Structure::FOREIGN_HIGH_LEFT, 0.3, 1250),
+      Calibrate::getCommand(Alignment_Structure::FOREIGN_HIGH_LEFT, 0.3, 750),
 
       ModifyRobotState::getCommand("is_drive_inverted", false),
       CloseDistanceBetween(Zones::FAR_ML_LEFT, 475, 0, false),
-      DriveForwardForTime::getCommand(0.2, 750, true),
+      DriveForwardForTime::getCommand(0.25, 750, true),
       IntakeCubes::getCommand(1500),   
 
       ModifyRobotState::getCommand("is_drive_inverted", true),   
       DriveForwardForTime::getCommand(0.3, 500, false),
-      FlatAlignWithY::getCommand(TILE_SIZE_MM * 5), 
+      //FlatAlignWithY::getCommand(TILE_SIZE_MM * 5), 
       FlatAlignWithX::getCommand(TILE_SIZE_MM * 1.6), 
-      FlatAlignWithY::getCommand(TILE_SIZE_MM + (ROBOT_LENGTH_MM/2)), 
+      FlatAlignWithY::getCommand(TILE_SIZE_MM * 1.5), 
       FlatAlignWithX::getCommand(TILE_SIZE_MM+15), 
       TurnToLocation(Zones::NAT_HIGH_LEFT), 
       CloseDistanceBetween(Zones::NAT_HIGH_LEFT, ROBOT_LENGTH_MM/2, 0, false),

@@ -283,21 +283,34 @@ void FlatAlignWithY::start(){
 
 void SlantedAlignWithX::start(){   
    double heading = drivebaseRef.get<double>("Angle_Degrees_CCW") / 360.0 * (2 * M_PI);  
-   double xPos = drivebaseRef.get<double>("Pos_X"); 
+   double xPos = drivebaseRef.get<double>("Pos_X");  
+
    double xDiff = setpointX - xPos;  
-   double dist = xDiff / cos(heading); 
+   double dist = fabs(xDiff / cos(heading));  
+
    if (!RobotState::getStateOf("is_counterclockwise")){ 
     dist *= -1;
+   }  
+
+   if (copysign(1, cos(heading)) != copysign(1, xDiff)){ 
+    dist *= -1;
    }
+
    setpoints.push_back(dist);
    numOfOperations += 1;
 }  
 
 void SlantedAlignWithY::start(){   
    double heading = drivebaseRef.get<double>("Angle_Degrees_CCW") / 360.0 * (2 * M_PI);  
-   double yPos = drivebaseRef.get<double>("Pos_Y");  
+   double yPos = drivebaseRef.get<double>("Pos_Y");   
+
    double yDiff = setpointY - yPos;  
-   double dist = yDiff / sin(heading); 
+   double dist = fabs(yDiff / sin(heading));  
+   
+   if (copysign(1, sin(heading)) != copysign(1, xDiff)){ 
+    dist *= -1;
+   }
+
    setpoints.push_back(dist);
    numOfOperations += 1;
 } 

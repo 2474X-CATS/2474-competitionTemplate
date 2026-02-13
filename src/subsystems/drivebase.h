@@ -40,7 +40,8 @@ private:
   static double ENCODER_DIST_FROM_CENTER;
   static double DRIVE_WHEEL_RADIUS_MM;  
   static double MID_ALIGNER_LENGTH; 
-  static double HIGH_ALIGNER_LENGTH;
+  static double HIGH_ALIGNER_LENGTH; 
+  static double MAX_RPM;
 
   vex::rotation encoderLinear;
   //vex::rotation encoderAngular; 
