@@ -137,22 +137,25 @@ void Drivebase::init()
    
    //------------------------------ 
 
-   turnPID.P = 2.5; 
-   turnPID.I = 0.85;//0.7;
-   turnPID.D = 0.0; 
-   turnPID.errorTolerance = 1;
+   turnPID.P = 2.6; 
+   turnPID.I = 0.0275;//0.7; 
+   turnPID.iLimit = 180;
+   turnPID.D = 0.00; 
+   turnPID.errorTolerance = 1.25;
    
    //--------------------------  >
  
-   trapConsts.maxVelocity = (MAX_RPM * (2 * DRIVE_WHEEL_RADIUS_MM * M_PI)) / 60.0 * (MAX_RPM / 600.0);
-   trapConsts.maxAcceleration = trapConsts.maxVelocity / (0.5); // Reach max speed in 0.5 seconds  
+   trapConsts.maxVelocity = ((MAX_RPM * (2 * DRIVE_WHEEL_RADIUS_MM * M_PI)) / 60.0 * (MAX_RPM / 600.0)) * 0.9;
+   trapConsts.maxAcceleration = trapConsts.maxVelocity / (0.525); // Reach max speed in 0.5 seconds  
    //-------------------------- 
    
-   setStartingPos(startX, startY);
+   setStartingPos(startX, startY); 
+
 
    lastTimestamp = Brain.Timer.time(vex::sec);  
    
 };
+
 
 void Drivebase::periodic()
 {        
@@ -171,11 +174,16 @@ void Drivebase::updateTelemetry()
 
       if (RobotState::getStateOf("is_drive_inverted")){ 
         angle += 180;
-      }  
-   
-      angle = fmod(angle, 360); 
+      }   
 
-      set<double>("Angle_Degrees_CCW", angle); 
+      if (!RobotState::getStateOf("is_counterclockwise")){ 
+        double distFromInflection = 90 - angle;  
+        angle += distFromInflection * 2;  
+        angle += 360; 
+        angle = fmod(angle, 360);
+      }
+   
+      set<double>("Angle_Degrees_CCW", fmod(angle, 360)); 
 
       double deltaTime = Brain.Timer.time(vex::sec) - lastTimestamp;
 
@@ -191,12 +199,7 @@ void Drivebase::updateTelemetry()
 
       double angleRadians = angle * (2 * M_PI) / 360;
       
-      if (RobotState::getStateOf("is_counterclockwise")){ 
-         x += (hypotenuse * cos(angleRadians));
-      } else { 
-         x -= (hypotenuse * cos(angleRadians)); 
-      } 
-      
+      x += (hypotenuse * cos(angleRadians));
       y += (hypotenuse * sin(angleRadians)); 
    }
      
@@ -228,6 +231,7 @@ void Drivebase::updateTelemetry()
 
    //---------------------------------------------------------
    lastTimestamp = Brain.Timer.time(vex::sec);  
+   Brain.Screen.printAt(20, 150, "Angle Degrees CCW: %.2f", get<double>("Angle_Degrees_CCW"));
    
 };
 
@@ -259,15 +263,33 @@ void Drivebase::arcadeDrive(double speed, double rotation)
    
 };
 
-void Drivebase::manualDriveForward(double speedMM)
-{ 
+void Drivebase::manualDriveForward(double speedMM, double centerAngle)
+{   
+   double currentAngle = get<double>("Angle_Degrees_CCW"); 
+   
    if (!RobotState::getStateOf("is_drive_inverted")){ 
       speedMM *= -1; 
-   }
+   } 
+
    double netSpeed = speedMM / (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) * 60;  
-   netSpeed *= (600.0/MAX_RPM);   
-   leftDriveMotors.setVelocity(netSpeed, vex::velocityUnits::rpm);
-   rightDriveMotors.setVelocity(netSpeed, vex::velocityUnits::rpm);
+   netSpeed *= (600.0/MAX_RPM);     
+   
+   double angleCorrection = 0;  
+
+   if (centerAngle != -1){ 
+     double angleDiff = centerAngle - currentAngle;  
+
+     if (angleDiff > 180){  
+      angleDiff = -(360 - angleDiff);
+     } else if (angleDiff < -180){ 
+      angleDiff = (360 + angleDiff);
+     } 
+
+     angleCorrection = ((DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) * (angleDiff / 360.0));  
+   }
+   
+   leftDriveMotors.setVelocity(netSpeed - angleCorrection, vex::velocityUnits::rpm);
+   rightDriveMotors.setVelocity(netSpeed + angleCorrection, vex::velocityUnits::rpm);
    leftDriveMotors.spin(vex::directionType::rev);
    rightDriveMotors.spin(vex::directionType::fwd); 
 };
@@ -402,15 +424,13 @@ void Drivebase::calibrate(Alignment_Structure struc){
       break;
    }   
    
-   supposedAngle = -1; // Angle calibration is redundant mostly
+   //supposedAngle = -1; // Angle calibration is redundant mostly
 
    if (supposedAngle == -1){ 
       return; 
-   } 
+   }  
 
-   if (!RobotState::getStateOf("is_counterclockwise")){   
-        supposedAngle += (90 - supposedAngle) * 2 + 360;  
-   } 
+ 
 
    if (RobotState::getStateOf("is_drive_inverted")){ 
       supposedAngle += 180;
@@ -429,7 +449,7 @@ PIDConstants Drivebase::getTurningPID()
 void Drivebase::setStartingPos(double x, double y){  
    set<double>("Pos_X", x + (ROBOT_WIDTH_MM/2)); 
    set<double>("Pos_Y", y + (ROBOT_LENGTH_MM/2));  
-   driveGyro.setHeading(90, vex::rotationUnits::deg);
+   driveGyro.setHeading(90, vex::rotationUnits::deg); 
 }
 
 TrapezoidConstants Drivebase::getMotionConstants(){ 

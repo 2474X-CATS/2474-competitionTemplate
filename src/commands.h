@@ -63,8 +63,11 @@ protected:
   bool initialized = false;
 
   //bool isCounterClockwise;
-  bool isGoingForward;
+  bool isGoingForward; 
   double startingPoint[2];
+  double lastPoint[2]; 
+
+  double referenceAngle = 0;
 
   int operationsIndex = 0;
   int numOfOperations;
@@ -563,14 +566,37 @@ protected:
   bool isOver() override;
   void end() override; 
   string repr() override; 
-};
+}; 
+/*
+class AnchorHeading : Command<DummySystem>
+{ 
+public:  
 
+
+  static CommandInterface *getCommand()
+  {
+    return new AnchorHeading();
+  }
+
+  AnchorHeading() :  
+                                 Command<DummySystem>(GLOBAL_DUMMY)
+                                 {};
+
+  ~AnchorHeading() override = default;
+
+protected:
+  void start() override;
+  void periodic() override;
+  bool isOver() override;
+  void end() override; 
+  
+};
+*/
 CommandInterface* DriveToLocation(int zoneIndex, double dist, PathType pathType, bool intaking); 
 
 CommandInterface* TurnToLocation(int zoneIndex); 
 CommandInterface* TurnToLocation(int zoneIndex, double dist); 
 
 CommandInterface* CloseDistanceBetween(int zoneIndex, double dist, double offset, bool intaking);
-
 
 #endif

@@ -41,7 +41,7 @@ private:
   static double DRIVE_WHEEL_RADIUS_MM;  
   static double MID_ALIGNER_LENGTH; 
   static double HIGH_ALIGNER_LENGTH; 
-  static double MAX_RPM;
+  static double MAX_RPM; 
 
   vex::rotation encoderLinear;
   //vex::rotation encoderAngular; 
@@ -117,7 +117,7 @@ public:
 
   void arcadeDrive(double speed, double rotation); 
 
-  void manualDriveForward(double speedMM); 
+  void manualDriveForward(double speedMM, double centerAngle); 
   void manualPercentageDrive(double decimal);
   void manualTurnClockwise(double turnDeg); 
   
@@ -126,8 +126,7 @@ public:
   
   void setCalibratingStructure(Alignment_Structure struc);   
   void setStartingPos(double x, double y); 
-
-
+  
   static Location *getLocation(int index);
   PIDConstants getTurningPID();
   TrapezoidConstants getMotionConstants();  

@@ -7,7 +7,8 @@
 //bool DrivePath::isCounterClockwise = false;
 
 void DrivePath::start()
-{
+{ 
+    referenceAngle = drivebaseRef.get<double>("Angle_Degrees_CCW");
     return;
 }
 
@@ -40,7 +41,7 @@ void DrivePath::drivePeriodic()
 {
     if (!initialized)
     {
-        initializeDrive();
+        initializeDrive(); 
         initialized = true;  
         RobotState::manuallyModifyState("intaking", intaking);
     }
@@ -72,7 +73,7 @@ void DrivePath::turnPeriodic()
     {
         if (isTurnOver())
         {
-            operationsIndex += 1;
+            operationsIndex += 1; 
             initialized = false;
             drivebaseRef.stop();
             delete turnPID;
@@ -95,7 +96,7 @@ bool DrivePath::isTurning()
 }
 
 bool DrivePath::isDriveOver()
-{
+{ 
     return (Brain.Timer.time(vex::sec) - drivingProfile->getStartTime()) >= drivingProfile->getTotalDuration(); 
 }
 
@@ -104,28 +105,54 @@ void DrivePath::initializeDrive()
     isGoingForward = setpoints.at(operationsIndex) > 0;
     drivingProfile = new TrapezoidalMotionProfile(drivebaseRef.getMotionConstants(), abs(setpoints.at(operationsIndex)), Brain.Timer.time(vex::sec));
     
+    referenceAngle = drivebaseRef.get<double>("Angle_Degrees_CCW"); 
+
+    startingPoint[0] = drivebaseRef.get<double>("Pos_X"); 
+    startingPoint[1] = drivebaseRef.get<double>("Pos_Y"); 
+
+    lastPoint[0] = startingPoint[0]; 
+    lastPoint[1] = startingPoint[1]; 
 }
 
 void DrivePath::drive()
 {  
-    double output; 
-    TrapezoidalSetpoint setpoint = drivingProfile->generateSetpoint(Brain.Timer.time(vex::sec));  
-    output = setpoint.velocity;
-    if (!isGoingForward)
-        output *= -1;
-    drivebaseRef.manualDriveForward(output); 
+    double output;  
+    
+    double currentDist = hypot( 
+       lastPoint[0] - startingPoint[0], 
+       lastPoint[1] - startingPoint[1]
+    ); 
+
+    TrapezoidalSetpoint setpoint;  
+
+    setpoint = drivingProfile->generateSetpoint(Brain.Timer.time(vex::sec));   
+
+    output = setpoint.velocity; 
+
+    double positionError = setpoint.position - currentDist;
+    output += (positionError * 0.03); 
+
+    if (!isGoingForward) 
+        output *= -1; 
+
+    drivebaseRef.manualDriveForward(output, referenceAngle);  
+
+    lastPoint[0] = drivebaseRef.get<double>("Pos_X"); 
+    lastPoint[1] = drivebaseRef.get<double>("Pos_Y"); 
+
+
 }
 
 
 bool DrivePath::isTurnOver()
 {
-    return turnPID->atSetpoint(getAngularError());
+    return turnPID->atSetpoint(getAngularError()) || setpoints.at(operationsIndex) == -1;
 }
 
 void DrivePath::initializeTurn()
 {  
     turnPID = new pidcontroller(drivebaseRef.getTurningPID(), 0);
-    turnPID->setLastTimestamp(Brain.Timer.time()); 
+    turnPID->setLastTimestamp(Brain.Timer.time());  
 }
 
 void DrivePath::turn()
@@ -133,9 +160,9 @@ void DrivePath::turn()
     double output = turnPID->calculate(getAngularError(), Brain.Timer.time());  
     
     if (RobotState::getStateOf("is_counterclockwise"))
-      drivebaseRef.manualTurnClockwise(-output); 
+       drivebaseRef.manualTurnClockwise(output); 
     else { 
-      drivebaseRef.manualTurnClockwise(output);
+       drivebaseRef.manualTurnClockwise(-output);
     }
 }
 
@@ -145,13 +172,6 @@ double DrivePath::getAngularError()
 
     double angleSetpoint = setpoints.at(operationsIndex); 
 
-    if (!RobotState::getStateOf("is_counterclockwise")){ 
-        double distFromInflection = 90 - angleSetpoint;  
-        angleSetpoint += distFromInflection * 2;  
-        angleSetpoint += 360; 
-        angleSetpoint = fmod(angleSetpoint, 360);
-    }
-    
     double dist; 
     
     dist = angleSetpoint - currentAngle; 
@@ -285,18 +305,14 @@ void SlantedAlignWithX::start(){
    double heading = drivebaseRef.get<double>("Angle_Degrees_CCW") / 360.0 * (2 * M_PI);  
    double xPos = drivebaseRef.get<double>("Pos_X");  
 
-   double xDiff = setpointX - xPos;  
-   double dist = fabs(xDiff / cos(heading));  
+   double xDiff = setpointX - xPos;    
+   double dist = xDiff / cos(heading);   
+   
+   if (RobotState::getStateOf("is_drive_inverted")){ 
+      dist *= -1;
+   } 
 
-   if (!RobotState::getStateOf("is_counterclockwise")){ 
-    dist *= -1;
-   }  
-
-   if (copysign(1, cos(heading)) != copysign(1, xDiff)){ 
-    dist *= -1;
-   }
-
-   setpoints.push_back(dist);
+   setpoints.push_back(-dist);
    numOfOperations += 1;
 }  
 
@@ -305,12 +321,8 @@ void SlantedAlignWithY::start(){
    double yPos = drivebaseRef.get<double>("Pos_Y");   
 
    double yDiff = setpointY - yPos;  
-   double dist = fabs(yDiff / sin(heading));  
+   double dist = yDiff / sin(heading);  
    
-   if (copysign(1, sin(heading)) != copysign(1, xDiff)){ 
-    dist *= -1;
-   }
-
    setpoints.push_back(dist);
    numOfOperations += 1;
 } 
@@ -567,7 +579,24 @@ string WaitFor::repr(){
    ss << "Wait " << timeDuration; 
    return ss.str();
 }
+//--------------------------------------- 
+/*
+void AnchorHeading::start(){ 
+  Drivebase::globalRef->anchorAngle();
+};  
 
+void AnchorHeading::periodic(){ 
+  return;
+} 
+
+bool AnchorHeading::isOver(){ 
+  return true;
+} 
+
+void AnchorHeading::end(){ 
+  return;
+}  
+*/
 //--------------------------------------- 
 
 void DisengageHighGoal::start()
@@ -602,7 +631,8 @@ void DisengageHighGoal::end()
 
 void ModifyRobotState::start()
 {
-   RobotState::manuallyModifyState(entryKey, value);
+   RobotState::manuallyModifyState(entryKey, value); 
+   //Drivebase::globalRef->anchorAngle();
 }
 
 void ModifyRobotState::periodic()

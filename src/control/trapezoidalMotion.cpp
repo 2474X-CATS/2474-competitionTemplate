@@ -49,7 +49,25 @@ double TrapezoidalMotionProfile::calculateAcceleration(double time){
        output = 0;
   }
   return output;
-} 
+}  
+
+double TrapezoidalMotionProfile::convertPosToTime(double position){  
+  if (position < accelDist){ 
+     return sqrt((2 * position) / maxAcceleration); 
+  } else if (position < accelDist + cruiseDist){ 
+     return accelTime + ((position - accelDist) / maxVelocity);
+  } else if (position < accelDist + cruiseDist + decelDist){  
+     double initialPos = accelDist + cruiseDist; 
+     double timeOffset = accelTime + cruiseTime;   
+     double a = -maxAcceleration / 2;
+     double b = maxVelocity; 
+     double c = (initialPos - position);  
+     return ( (-1 * b) - sqrt( pow(b,2) - (4*a*c) ) ) / (2*a) + timeOffset; 
+
+  } else { 
+     return 0;
+  }
+}
 
 
 

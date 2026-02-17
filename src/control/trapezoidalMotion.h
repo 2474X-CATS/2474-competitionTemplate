@@ -58,7 +58,8 @@ class TrapezoidalMotionProfile {
       double getTotalDuration(); 
       double getStartTime();   
 
-      double calculatePosition(double time); 
+      double calculatePosition(double time);  
+      double convertPosToTime(double position);
 
       bool atGoal(double currentPosition, double currentVelocity); 
 

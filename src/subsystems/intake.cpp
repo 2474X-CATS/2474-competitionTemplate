@@ -17,7 +17,7 @@ void Intake::periodic()
       intakeConveyor.setVelocity(-ABSOLUTE_CONVEYOR_SPEED * 1.5, vex::velocityUnits::rpm); // Inwards
       intakeConveyor.spin(vex::directionType::fwd);
    }  
-   else if (RobotState::getStateOf("scoring_high")){ 
+   else if (RobotState::getStateOf("scoring_high")){  
       intakeConveyor.setVelocity(-ABSOLUTE_CONVEYOR_SPEED * 1.25, vex::velocityUnits::rpm); // Inwards
       intakeConveyor.spin(vex::directionType::fwd);
    }
