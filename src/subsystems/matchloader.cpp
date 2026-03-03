@@ -7,8 +7,12 @@ void Matchloader::init(){
    stop();
 }  
 
-void Matchloader::periodic(){ 
-   mlPiston.set(RobotState::getStateOf("matchloader_out")); 
+void Matchloader::periodic(){    
+   if (RobotState::getStateOf("matchloader_out")){ 
+     mlPiston.set(true);
+   } else { 
+     mlPiston.set(false);
+   }
 } 
 
 void Matchloader::updateTelemetry(){ 

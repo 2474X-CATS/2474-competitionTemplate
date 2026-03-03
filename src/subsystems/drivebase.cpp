@@ -16,7 +16,7 @@ double Drivebase::DRIVE_WHEEL_RADIUS_MM = 3.25 * 25.4 / 2; //3.25in diam
 double Drivebase::MID_ALIGNER_LENGTH = 0; 
 double Drivebase::HIGH_ALIGNER_LENGTH = 0; 
 
-double Drivebase::MAX_RPM = 450;
+double Drivebase::MAX_RPM = 360;
 
 Location *Drivebase::locations[14] = {
     new Location(
@@ -137,16 +137,16 @@ void Drivebase::init()
    
    //------------------------------ 
 
-   turnPID.P = 2.6; 
-   turnPID.I = 0.0275;//0.7; 
-   turnPID.iLimit = 180;
-   turnPID.D = 0.00; 
+   turnPID.P = 2.56; 
+   turnPID.I = 0.006;
+   turnPID.D = 0.07125; 
    turnPID.errorTolerance = 1.25;
    
    //--------------------------  >
  
-   trapConsts.maxVelocity = ((MAX_RPM * (2 * DRIVE_WHEEL_RADIUS_MM * M_PI)) / 60.0 * (MAX_RPM / 600.0)) * 0.9;
-   trapConsts.maxAcceleration = trapConsts.maxVelocity / (0.525); // Reach max speed in 0.5 seconds  
+   trapConsts.maxVelocity = (MAX_RPM * (2 * DRIVE_WHEEL_RADIUS_MM * M_PI)) / 60.0 * 0.98;// * (MAX_RPM / 600.0));
+   trapConsts.maxAcceleration = trapConsts.maxVelocity / (0.875); // Reach max speed in 0.9 seconds   
+   
    //-------------------------- 
    
    setStartingPos(startX, startY); 
@@ -231,7 +231,7 @@ void Drivebase::updateTelemetry()
 
    //---------------------------------------------------------
    lastTimestamp = Brain.Timer.time(vex::sec);  
-   Brain.Screen.printAt(20, 150, "Angle Degrees CCW: %.2f", get<double>("Angle_Degrees_CCW"));
+   //Brain.Screen.printAt(20, 150, "Angle Degrees CCW: %.2f", get<double>("Angle_Degrees_CCW"));
    
 };
 
@@ -285,7 +285,7 @@ void Drivebase::manualDriveForward(double speedMM, double centerAngle)
       angleDiff = (360 + angleDiff);
      } 
 
-     angleCorrection = ((DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) * (angleDiff / 360.0));  
+     angleCorrection = ((DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) * (angleDiff / 360.0)) * 3;  
    }
    
    leftDriveMotors.setVelocity(netSpeed - angleCorrection, vex::velocityUnits::rpm);
@@ -310,6 +310,7 @@ void Drivebase::manualTurnClockwise(double turnDeg)
    rotationsPerMinutes *= (360.0 / (360 - 41)); 
    rotationsPerMinutes = rotationsPerMinutes > 450 ? 450 : (rotationsPerMinutes < -450 ? -450 : rotationsPerMinutes); 
    
+   rotationsPerMinutes *= (600/MAX_RPM);
    //rotationsPerMinutes = 0; 
 
    leftDriveMotors.setVelocity(rotationsPerMinutes, vex::velocityUnits::rpm);
@@ -392,28 +393,28 @@ void Drivebase::calibrate(Alignment_Structure struc){
       break; 
      case NEARBY_MID: 
       loc = getLocation(4); 
-      supposedAngle = -1;//loc->getPerfectEntranceAngle();
+      supposedAngle = loc->getPerfectEntranceAngle();
       calibrationPoint = loc->getProjectedSetpoint(ROBOT_LENGTH_MM/2 + MID_ALIGNER_LENGTH); 
       set<double>("Pos_X", calibrationPoint.at(0)); 
       set<double>("Pos_Y", calibrationPoint.at(1)); 
       break; 
      case NEARBY_LOW:  
       loc = getLocation(5);
-      supposedAngle = -1;//loc->getPerfectEntranceAngle();
+      supposedAngle = loc->getPerfectEntranceAngle();
       calibrationPoint = loc->getProjectedSetpoint(ROBOT_LENGTH_MM/2 + MID_ALIGNER_LENGTH); 
       set<double>("Pos_X", calibrationPoint.at(0)); 
       set<double>("Pos_Y", calibrationPoint.at(1));   
       break;
      case FOREIGN_MID: 
       loc = getLocation(11);
-      supposedAngle = -1;//loc->getPerfectEntranceAngle();
+      supposedAngle = loc->getPerfectEntranceAngle();
       calibrationPoint = loc->getProjectedSetpoint(ROBOT_LENGTH_MM/2 + MID_ALIGNER_LENGTH); 
       set<double>("Pos_X", calibrationPoint.at(0)); 
       set<double>("Pos_Y", calibrationPoint.at(1));   
       break;
      case FOREIGN_LOW: 
       loc = getLocation(12);
-      supposedAngle = -1;//loc->getPerfectEntranceAngle();
+      supposedAngle = loc->getPerfectEntranceAngle();
       calibrationPoint = loc->getProjectedSetpoint(ROBOT_LENGTH_MM/2 + MID_ALIGNER_LENGTH); 
       set<double>("Pos_X", calibrationPoint.at(0)); 
       set<double>("Pos_Y", calibrationPoint.at(1));   
@@ -424,14 +425,14 @@ void Drivebase::calibrate(Alignment_Structure struc){
       break;
    }   
    
-   //supposedAngle = -1; // Angle calibration is redundant mostly
-
    if (supposedAngle == -1){ 
       return; 
    }  
-
+   
+   if (!RobotState::getStateOf("is_counterclockwise")){ 
+     supposedAngle += (90 - supposedAngle) * 2; 
+   }
  
-
    if (RobotState::getStateOf("is_drive_inverted")){ 
       supposedAngle += 180;
    }   

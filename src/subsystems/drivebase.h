@@ -65,8 +65,7 @@ private:
 
   double startX, startY;
   double linearSpeedFactor = 1; 
-  double angularSpeedFactor = 0.8;  
-  
+  double angularSpeedFactor = 1;  
 
   double lastTimestamp = 0;  
   
@@ -74,7 +73,6 @@ private:
 
   static Location *locations[];    
   
-
   void calibrate(Alignment_Structure struc);  
 
 protected:

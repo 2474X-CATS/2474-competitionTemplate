@@ -18,7 +18,7 @@ class Matchloader : public Subsystem {
      Subsystem( 
         "matchloader", 
         { 
-            (EntrySet){"is_on", EntryType::BOOL}
+            (EntrySet){"is_on", EntryType::BOOL} 
         }
      ), 
      mlPiston(vex::pneumatics(Brain.ThreeWirePort.H))

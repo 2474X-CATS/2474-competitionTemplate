@@ -23,22 +23,24 @@ void Indexer::periodic(){
    }   
 
    if (ableToScore && RobotState::getStateOf("scoring_high")){ 
-     indexerMotor.setVelocity(-ABSOLUTE_INDEXER_SPEED * 0.6, vex::velocityUnits::rpm); 
+     indexerMotor.setVelocity(-ABSOLUTE_INDEXER_SPEED * 0.9, vex::velocityUnits::rpm); 
      indexerMotor.spin(vex::directionType::fwd);  
 
-   } else if (RobotState::getStateOf("scoring_mid")){  
-     if (RobotState::getStateOf("in_autonomous")){ 
-       indexerMotor.setVelocity(ABSOLUTE_INDEXER_SPEED * 0.35, vex::velocityUnits::rpm);
+   } else if (RobotState::getStateOf("scoring_mid")){    
+     
+     if (RobotState::getStateOf("in_autonomous") || RobotState::getStateOf("in_skills")){ 
+       indexerMotor.setVelocity(ABSOLUTE_INDEXER_SPEED * 0.6, vex::velocityUnits::rpm);
      } else { 
-       indexerMotor.setVelocity(ABSOLUTE_INDEXER_SPEED * 0.25, vex::velocityUnits::rpm);
-     }
+       indexerMotor.setVelocity(ABSOLUTE_INDEXER_SPEED * 0.6, vex::velocityUnits::rpm);//Was 0.4
+     } 
+    
      indexerMotor.spin(vex::directionType::fwd);
    } else { 
      indexerMotor.setVelocity(0, vex::percentUnits::pct); 
      indexerMotor.spin(vex::directionType::fwd);
    }   
 
-   if (Brain.Timer.time(vex::msec) - get<double>("last_long_goal_pressed") <= 1000){ 
+   if (ableToScore && RobotState::getStateOf("scoring_high")){ //Brain.Timer.time(vex::msec) - get<double>("last_long_goal_pressed") <= 1000){ 
      indexerHatch.open();
    } else { 
      indexerHatch.close();

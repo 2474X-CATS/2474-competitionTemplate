@@ -84,6 +84,7 @@ void RobotState::initializeState()
         (EntrySet){"ready", EntryType::BOOL},  
         (EntrySet){"in_autonomous", EntryType::BOOL},  
         (EntrySet){"is_counterclockwise", EntryType::BOOL},   
+        (EntrySet){"in_skills", EntryType::BOOL},  
         
         (EntrySet){"calibrating", EntryType::BOOL},  
         (EntrySet){"k_calibrating", EntryType::BOOL},
@@ -93,7 +94,7 @@ void RobotState::initializeState()
         (EntrySet){"scoring_low", EntryType::BOOL}, 
         (EntrySet){"matchloader_out", EntryType::BOOL},
         (EntrySet){"descore_in", EntryType::BOOL},   
-
+        (EntrySet){"outtaking", EntryType::BOOL},
         (EntrySet){"intaking", EntryType::BOOL}, 
 
         (EntrySet){"k_inversion_held", EntryType::BOOL},
@@ -116,23 +117,25 @@ void RobotState::updateRegular()
          manuallyModifyState("k_inversion_held", false); 
          manuallyModifyState("is_drive_inverted", !getStateOf("is_drive_inverted")); 
       }
-   } 
-   
-   manuallyModifyState("descore_in", Controller.ButtonL1.pressing()); 
+   }  
 
+   manuallyModifyState("outtaking", Controller.ButtonDown.pressing()); 
+   manuallyModifyState("descore_in", Controller.ButtonL1.pressing()); 
    manuallyModifyState("matchloader_out", Controller.ButtonL2.pressing());   
     
 }
 
 void RobotState::updateStopped()
-{   
+{    
+
    manuallyModifyState("scoring_high", false); 
    manuallyModifyState("scoring_mid", false);
    manuallyModifyState("scoring_low", false);  
    manuallyModifyState("matchloader_out", false); 
    manuallyModifyState("k_inversion_held", false);    
    manuallyModifyState("descore_in", false); 
-   manuallyModifyState("intaking", false); 
+   manuallyModifyState("intaking", false);  
+
 }; 
 
 void RobotState::updateInitializing(){ 

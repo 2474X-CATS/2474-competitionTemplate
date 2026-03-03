@@ -26,7 +26,7 @@ class Intake : public Subsystem {
         }
      ), 
      intakeConveyor(vex::motor(vex::PORT7)),  
-     lowGoalFilter(vex::pneumatics(Brain.ThreeWirePort.E))
+     lowGoalFilter(vex::pneumatics(Brain.ThreeWirePort.D))
      { 
        globalRef = this; 
      } 
