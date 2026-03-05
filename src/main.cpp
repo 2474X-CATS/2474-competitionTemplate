@@ -155,7 +155,6 @@ int main()
 
   Drivebase drive = Drivebase(0,0); 
   Intake intake;
-  Indexer indexer;
   Matchloader matchloader;
   Hooks hooks;
 
