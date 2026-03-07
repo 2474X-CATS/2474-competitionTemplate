@@ -43,18 +43,20 @@ private:
   static double HIGH_ALIGNER_LENGTH; 
   static double MAX_RPM; 
 
-  vex::rotation encoderLinear;
+  //vex::rotation encoderLinear;
   //vex::rotation encoderAngular; 
 
   vex::inertial driveGyro;
-
+ 
+  
   vex::motor driveFrontLeft;
-  vex::motor driveMidLeft;
+  //vex::motor driveMidLeft;
   vex::motor driveBackLeft;
   
   vex::motor driveFrontRight; 
-  vex::motor driveMidRight; 
+  //vex::motor driveMidRight; 
   vex::motor driveBackRight;
+  
 
   vex::motor_group leftDriveMotors; 
   vex::motor_group rightDriveMotors;   
@@ -91,17 +93,17 @@ public:
                                                   (EntrySet){"Angle_Degrees_CCW", EntryType::DOUBLE}, 
                                                   (EntrySet){"overheating", EntryType::BOOL}
                                               }), 
-                                          encoderLinear(vex::rotation(vex::PORT9)),
+                                          //encoderLinear(vex::rotation(vex::PORT9)),
                                           //encoderAngular(vex::rotation(vex::PORT10)),  
-                                          driveGyro(vex::inertial(vex::PORT16)),
-                                          driveFrontLeft(vex::motor(vex::PORT1, vex::ratio6_1)),
-                                          driveMidLeft(vex::motor(vex::PORT2, vex::ratio6_1, true)),
-                                          driveBackLeft(vex::motor(vex::PORT3, vex::ratio6_1)),  
-                                          driveFrontRight(vex::motor(vex::PORT4, vex::ratio6_1)), 
-                                          driveMidRight(vex::motor(vex::PORT5, vex::ratio6_1, true)),
-                                          driveBackRight(vex::motor(vex::PORT15, vex::ratio6_1)),
-                                          leftDriveMotors(vex::motor_group(driveFrontLeft, driveMidLeft, driveBackLeft)),
-                                          rightDriveMotors(vex::motor_group(driveFrontRight, driveMidRight, driveBackRight)), 
+                                          driveGyro(vex::inertial(vex::PORT20)),//Used to be port 16
+                                          driveFrontLeft(vex::motor(vex::PORT10, vex::ratio6_1)),//Used to be 1
+                                          //driveMidLeft(vex::motor(vex::PORT2, vex::ratio6_1, true)),
+                                          driveBackLeft(vex::motor(vex::PORT9, vex::ratio6_1)), //Used to be 3
+                                          driveFrontRight(vex::motor(vex::PORT1, vex::ratio6_1)), //Used to be 4
+                                          //driveMidRight(vex::motor(vex::PORT5, vex::ratio6_1, true)),
+                                          driveBackRight(vex::motor(vex::PORT2, vex::ratio6_1)), //Used to be 15
+                                          leftDriveMotors(vex::motor_group(driveFrontLeft, driveBackLeft)),
+                                          rightDriveMotors(vex::motor_group(driveFrontRight, driveBackRight)), 
                                           startX(startX),
                                           startY(startY)
   {

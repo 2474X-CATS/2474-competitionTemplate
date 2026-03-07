@@ -16,7 +16,7 @@ double Drivebase::DRIVE_WHEEL_RADIUS_MM = 3.25 * 25.4 / 2; //3.25in diam
 double Drivebase::MID_ALIGNER_LENGTH = 0; 
 double Drivebase::HIGH_ALIGNER_LENGTH = 0; 
 
-double Drivebase::MAX_RPM = 360;
+double Drivebase::MAX_RPM = (36/60) * 600; //Was 360
 
 Location *Drivebase::locations[14] = {
     new Location(
@@ -121,7 +121,7 @@ Location *Drivebase::locations[14] = {
 void Drivebase::init()
 {  
    
-   encoderLinear.setPosition(0, vex::rotationUnits::rev);
+   //encoderLinear.setPosition(0, vex::rotationUnits::rev);
    //encoderAngular.setPosition(0, vex::rotationUnits::rev);   
 
    leftDriveMotors.setStopping(vex::brakeType::coast);
@@ -158,7 +158,7 @@ void Drivebase::init()
 
 void Drivebase::periodic()
 {        
-   arcadeDrive(((double)RobotState::getAxisState(AxisType::LEFT_VERTICAL)), ((double)RobotState::getAxisState(AxisType::RIGHT_HORIZONTAL)));   
+   arcadeDrive(((double)RobotState::getAxisState(AxisType::LEFT_VERTICAL))*-1, ((double)RobotState::getAxisState(AxisType::RIGHT_HORIZONTAL)));   
 }
 
 void Drivebase::updateTelemetry()
@@ -190,8 +190,8 @@ void Drivebase::updateTelemetry()
       rightDriveMotors.setStopping(vex::brakeType::brake);  
    
       double hypotenuse; 
-      hypotenuse = -((encoderLinear.velocity(vex::velocityUnits::rpm) * 2 * M_PI * ENCODER_WHEEL_LIN_RADIUS_MM) / 60 * deltaTime); 
-
+      //hypotenuse = -((encoderLinear.velocity(vex::velocityUnits::rpm) * 2 * M_PI * ENCODER_WHEEL_LIN_RADIUS_MM) / 60 * deltaTime); 
+      hypotenuse = (leftDriveMotors.velocity(vex::velocityUnits::rpm) - rightDriveMotors.velocity(vex::velocityUnits::rpm)/2) * 2 * M_PI * ENCODER_WHEEL_LIN_RADIUS_MM / 60 * deltaTime;
       if (RobotState::getStateOf("is_drive_inverted")){ 
         hypotenuse *= -1;
       } 
@@ -205,6 +205,7 @@ void Drivebase::updateTelemetry()
    set<double>("Pos_X", x); 
    set<double>("Pos_Y", y);  
    
+   /*
    double temperatureSum = 0;  
  
    temperatureSum += driveFrontLeft.temperature(vex::temperatureUnits::celsius); 
@@ -217,7 +218,7 @@ void Drivebase::updateTelemetry()
    double avgTemp = temperatureSum / 6.0;
    
    set<bool>("overheating", avgTemp >= MOTOR_TEMP_LIMIT_CELSIUS);   
-
+   */
 
    if (RobotState::getStateOf("k_calibrating")){  
        if (RobotState::getStateOf("calibrating")){ 
@@ -230,7 +231,9 @@ void Drivebase::updateTelemetry()
 
    //---------------------------------------------------------
    lastTimestamp = Brain.Timer.time(vex::sec);  
-   
+   Brain.Screen.printAt(20,150,"Pos X: %.2f", get<double>("Pos_X")); 
+   Brain.Screen.printAt(20,175,"Pos Y: %.2f", get<double>("Pos_Y")); 
+   Brain.Screen.printAt(20,200,"Angle Degrees: %.2f", get<double>("Angle_Degrees_CCW")); 
    
 };
 
@@ -268,7 +271,9 @@ void Drivebase::manualDriveForward(double speedMM, double centerAngle)
    
    if (!RobotState::getStateOf("is_drive_inverted")){ 
       speedMM *= -1; 
-   } 
+   }  
+
+   speedMM*=-1;//Delete later
 
    double netSpeed = speedMM / (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) * 60;  
    netSpeed *= (600.0/MAX_RPM);     
@@ -306,8 +311,8 @@ void Drivebase::manualPercentageDrive(double decimal){
 void Drivebase::manualTurnClockwise(double turnDeg)
 { 
    double rotationsPerMinutes = (((ROBOT_WIDTH_MM * M_PI) * (turnDeg / 360.0)) / (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI)) * 60;  
-   rotationsPerMinutes *= (360.0 / (360 - 41)); 
-   rotationsPerMinutes = rotationsPerMinutes > 450 ? 450 : (rotationsPerMinutes < -450 ? -450 : rotationsPerMinutes); 
+   //rotationsPerMinutes *= (360.0 / (360 - 41)); 
+   //rotationsPerMinutes = rotationsPerMinutes > 450 ? 450 : (rotationsPerMinutes < -450 ? -450 : rotationsPerMinutes); 
    
    rotationsPerMinutes *= (600/MAX_RPM);
    //rotationsPerMinutes = 0; 

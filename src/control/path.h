@@ -1,7 +1,7 @@
 #ifndef __PATH_H__ 
 #define __PATH_H__ 
 
-#include "bezier.h" 
+#include "../utilities/bezier.h" 
 #include "trapezoidalMotion.h" 
 #include "math.h"
 
