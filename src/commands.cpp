@@ -95,14 +95,15 @@ bool DrivePath::isTurning()
 
 bool DrivePath::isDriveOver()
 { 
-    return (Brain.Timer.time(vex::sec) - drivingProfile->getStartTime()) >= drivingProfile->getTotalDuration(); 
+    return (Brain.Timer.time() - drivingProfile->getStartTime()) >= drivingProfile->getTotalDuration(); 
 }
 
 void DrivePath::initializeDrive()
 {
     isGoingForward = setpoints.at(operationsIndex) > 0;
-    drivingProfile = new TrapezoidalMotionProfile(drivebaseRef.getMotionConstants(), abs(setpoints.at(operationsIndex)), Brain.Timer.time(vex::sec));
-    
+    drivingProfile = new TrapezoidalMotionProfile(drivebaseRef.getMotionConstants(), abs(setpoints.at(operationsIndex)));
+    drivingProfile->setLastTimestamp(Brain.Timer.time());
+
     referenceAngle = drivebaseRef.get<double>("Angle_Degrees_CCW"); 
 
     startingPoint[0] = drivebaseRef.get<double>("Pos_X"); 

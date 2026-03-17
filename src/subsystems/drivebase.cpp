@@ -133,68 +133,77 @@ void Drivebase::init()
       vex::this_thread::yield();
    }  
 
-   driveGyro.setHeading(90, vex::rotationUnits::deg);
+   driveGyro.setHeading(90, vex::rotationUnits::deg); 
+
+   set<double>("last_heading", driveGyro.heading(vex::rotationUnits::deg)); 
+   set<double>("Angle_Degrees_CCW", 90); 
+
+   setStartingPos(startX, startY);
    
    //------------------------------ 
 
-   turnPID.P = 2.56; 
+   turnPID.P = 0.5; 
    turnPID.I = 0.0;
-   turnPID.D = 0.07125; 
-   turnPID.errorTolerance = 1.25; 
+   turnPID.D = 0.0; 
+   turnPID.errorTolerance = 0; 
    
    //--------------------------  >
  
-   trapConsts.maxVelocity = (MAX_RPM * (2 * DRIVE_WHEEL_RADIUS_MM * M_PI)) / 60.0 * 0.98;// * (MAX_RPM / 600.0));
-   trapConsts.maxAcceleration = trapConsts.maxVelocity / (0.875); // Reach max speed in 0.9 seconds   
-   
-   array<array<double,2>, 3> points; 
-   points[0] = {(TILE_SIZE_MM * 3 + 200), 425};  
-   points[1] = {TILE_SIZE_MM,TILE_SIZE_MM*1.5}; 
-   points[2] = {TILE_SIZE_MM*4,TILE_SIZE_MM*2};
-
-   BezierCurve curve = BezierCurve(points);
-   testPath = new Path(&curve, trapConsts, turnPID, 750, 1000); 
-
-   testPath->setTimestamp(Brain.Timer.time());
+   trapConsts.maxVelocity = ((MAX_RPM * (2 * DRIVE_WHEEL_RADIUS_MM * M_PI)) / 60.0 * 0.98);// * (MAX_RPM / 600.0));
+   trapConsts.maxAcceleration = trapConsts.maxVelocity / 0.95; // Reach max speed in 0.9 seconds    
 
    //-------------------------- 
-   
-   setStartingPos(startX, startY); 
+   array<double,2> sp = {get<double>("Pos_X"), get<double>("Pos_Y")}; 
+   array<double,2> ep = {TILE_SIZE_MM * 5.5, TILE_SIZE_MM * 2 - 500};
+   testPath = new CirclePath( 
+       sp, 
+       get<double>("Angle_Degrees_CCW"),  
+       ep, 
+       true,
+       pow(trapConsts.maxVelocity,2) / 500,  
+       trapConsts, 
+       turnPID
+   ); 
+
+   testPath->init(Brain.Timer.time());
+
+   //-------------------------- 
 
 
-   lastTimestamp = Brain.Timer.time(vex::sec);  
-   
+   lastTimestamp = Brain.Timer.time(vex::sec);   
+
 };
 
 void Drivebase::periodic()
 {        
-   //arcadeDrive(((double)RobotState::getAxisState(AxisType::LEFT_VERTICAL))*-1, ((double)RobotState::getAxisState(AxisType::RIGHT_HORIZONTAL)));    
-   PathFrameOutput output = testPath->calculateFrameOutput(get<double>("Pos_X"), get<double>("Pos_Y"), get<double>("Angle_Degrees_CCW"), Brain.Timer.time()); 
-   manualDriveWithCurvature(output.linearVelocity, output.angularVelocity); 
+   //arcadeDrive(((double)RobotState::getAxisState(AxisType::LEFT_VERTICAL))*-1, ((double)RobotState::getAxisState(AxisType::RIGHT_HORIZONTAL)));     
+   double timestamp = Brain.Timer.time();
+   if (!testPath->completed(timestamp)){ 
+      PathFrameOutput output = testPath->calculateFrameOutput( 
+         get<double>("Pos_X"), 
+         get<double>("Pos_Y"),  
+         get<double>("Angle_Degrees_CCW"),  
+         Brain.Timer.time()); 
+
+      manualDriveWithCurvature(output.linearVelocity, output.angularVelocity);
+   } else { 
+      stop();
+   }
 }
 
 void Drivebase::updateTelemetry()
 {     
    
    double x = get<double>("Pos_X");
-   double y = get<double>("Pos_Y"); 
+   double y = get<double>("Pos_Y");  
 
+   //double angle = get<double>("Angle_Degrees_CCW");
+   
    if (RobotState::getStateOf("ready")){   
       double angle; 
       angle = driveGyro.angle(vex::rotationUnits::deg);    
-
-      if (RobotState::getStateOf("is_drive_inverted")){ 
-        angle += 180;
-      }   
-
-      if (!RobotState::getStateOf("is_counterclockwise")){ 
-        double distFromInflection = 90 - angle;  
-        angle += distFromInflection * 2;  
-        angle += 360; 
-        angle = fmod(angle, 360);
-      }
    
-      set<double>("Angle_Degrees_CCW", fmod(angle, 360)); 
+      set<double>("Angle_Degrees_CCW", transformAngle(angle)); 
 
       double deltaTime = Brain.Timer.time(vex::sec) - lastTimestamp;
 
@@ -203,35 +212,23 @@ void Drivebase::updateTelemetry()
    
       double hypotenuse; 
       //hypotenuse = -((encoderLinear.velocity(vex::velocityUnits::rpm) * 2 * M_PI * ENCODER_WHEEL_LIN_RADIUS_MM) / 60 * deltaTime); 
-      hypotenuse = ((leftDriveMotors.velocity(vex::velocityUnits::rpm) - rightDriveMotors.velocity(vex::velocityUnits::rpm))/2) * 2 * M_PI * DRIVE_WHEEL_RADIUS_MM / 60 * deltaTime / (MAX_RPM/600.0);
+      hypotenuse = ((leftDriveMotors.velocity(vex::velocityUnits::rpm) - rightDriveMotors.velocity(vex::velocityUnits::rpm))/2) * 2 * M_PI * DRIVE_WHEEL_RADIUS_MM / 60 * deltaTime * (MAX_RPM/600);
       if (RobotState::getStateOf("is_drive_inverted")){ 
         hypotenuse *= -1;
       } 
 
-      double angleRadians = angle * (2 * M_PI) / 360;
+      double angleRadians = transformAngle(get<double>("last_heading")) * (2 * M_PI) / 360;
       
       x += (hypotenuse * cos(angleRadians));
       y += (hypotenuse * sin(angleRadians)); 
+      
+      set<double>("last_heading", angle);
    }
      
    set<double>("Pos_X", x); 
    set<double>("Pos_Y", y);  
    
-   /*
-   double temperatureSum = 0;  
- 
-   temperatureSum += driveFrontLeft.temperature(vex::temperatureUnits::celsius); 
-   temperatureSum += driveFrontRight.temperature(vex::temperatureUnits::celsius); 
-   temperatureSum += driveMidLeft.temperature(vex::temperatureUnits::celsius); 
-   temperatureSum += driveMidRight.temperature(vex::temperatureUnits::celsius); 
-   temperatureSum += driveBackLeft.temperature(vex::temperatureUnits::celsius); 
-   temperatureSum += driveBackRight.temperature(vex::temperatureUnits::celsius); 
-
-   double avgTemp = temperatureSum / 6.0;
    
-   set<bool>("overheating", avgTemp >= MOTOR_TEMP_LIMIT_CELSIUS);   
-   */
-
    if (RobotState::getStateOf("k_calibrating")){  
        if (RobotState::getStateOf("calibrating")){ 
          calibrate(calibratingWall); 
@@ -239,14 +236,15 @@ void Drivebase::updateTelemetry()
          RobotState::manuallyModifyState("calibrating", false);  
          RobotState::manuallyModifyState("k_calibrating", false);
        } 
-   } 
-
-   //---------------------------------------------------------
-   lastTimestamp = Brain.Timer.time(vex::sec);  
-   Brain.Screen.printAt(20,150,"Pos X: %.2f", get<double>("Pos_X")); 
-   Brain.Screen.printAt(20,175,"Pos Y: %.2f", get<double>("Pos_Y")); 
-   Brain.Screen.printAt(20,200,"Angle Degrees: %.2f", get<double>("Angle_Degrees_CCW")); 
+   }  
    
+   /* 
+   Brain.Screen.printAt(20, 150, "Pos X: %.2f", get<double>("Pos_X")); 
+   Brain.Screen.printAt(20, 175, "Pos Y: %.2f", get<double>("Pos_Y")); 
+   Brain.Screen.printAt(20, 200, "Angle Degrees: %.2f", get<double>("Angle_Degrees_CCW")); 
+   */ 
+
+   lastTimestamp = Brain.Timer.time(vex::sec);  
 };
 
 Location *Drivebase::getLocation(int index)
@@ -325,6 +323,19 @@ void Drivebase::manualTurnCounterclockwise(double turnDeg)
    leftDriveMotors.spin(vex::directionType::fwd);
    rightDriveMotors.spin(vex::directionType::fwd);
 }; 
+
+double Drivebase::transformAngle(double heading){  
+
+   if (RobotState::getStateOf("is_drive_inverted")){ 
+      heading = fmod(heading + 180, 360);
+   }    
+
+   if (!RobotState::getStateOf("is_counterclockwise")){ 
+      heading += (90 - heading) * 2 + 360;  
+   } 
+
+   return fmod(heading, 360);
+}
 
 void Drivebase::manualDriveWithCurvature(double speedMM, double turnDeg){ 
    if (!RobotState::getStateOf("is_drive_inverted")){ 

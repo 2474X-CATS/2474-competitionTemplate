@@ -153,8 +153,9 @@ int main()
 
   //--------------------DONT MODIFY (MOSTLY)-----------------
 
-  Drivebase drive = Drivebase(0,0); 
-  Intake intake;
+  Drivebase drive = Drivebase(TILE_SIZE_MM * 4, TILE_SIZE_MM * 2);  
+  
+  //Intake intake;
   //Matchloader matchloader;
   //Hooks hooks;
 

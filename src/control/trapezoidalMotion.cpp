@@ -1,21 +1,28 @@
 #include "trapezoidalMotion.h" 
 #include "math.h"
 
-void TrapezoidalMotionProfile::init(){  
+void TrapezoidalMotionProfile::init(double startingVelocity, double finalVelocity){  
   
-   accelTime = maxVelocity / maxAcceleration; 
-   accelDist = (0.5 * maxAcceleration * pow(accelTime,2)); 
+   accelTime = (maxVelocity - startingVelocity) / maxAcceleration; 
+   accelDist = (startingVelocity * accelTime) + (0.5 * maxAcceleration * pow(accelTime,2)); 
 
-   if (accelDist > setpoint / 2){ 
+   if (accelDist > setpoint / 2){   
+     maxVelocity = sqrt( 
+         pow(startingVelocity,2) + (2 * maxAcceleration * (setpoint/2))
+     );   
+     consts.maxVelocity = maxVelocity; 
+     accelTime = (maxVelocity - startingVelocity) / maxAcceleration; 
+     accelDist = (startingVelocity * accelTime) + (0.5 * maxAcceleration * pow(accelTime,2));
+     /*
      accelTime = sqrt((setpoint / maxAcceleration)); 
      accelDist = setpoint / 2; 
      maxVelocity = accelTime * maxAcceleration;    
+     consts.maxVelocity = maxVelocity; 
+     */
+   }   
 
-     consts.maxVelocity = maxVelocity;
-   }  
-
-   decelDist = accelDist; 
-   decelTime = accelTime; 
+   decelTime = (maxVelocity - finalVelocity) / maxAcceleration;//accelTime; 
+   decelDist = (maxVelocity * decelTime) + (0.5 * -maxAcceleration * pow(decelTime,2)); 
 
    cruiseDist = setpoint - accelDist - decelDist; 
    cruiseTime = cruiseDist / maxVelocity;    
@@ -24,9 +31,9 @@ void TrapezoidalMotionProfile::init(){
 }; 
 
 double TrapezoidalMotionProfile::calculateVelocity(double time){ 
-    double elapsedTime = time - startingTimestamp;  
+    double elapsedTime = (time - startingTimestamp) / 1000;  
     double output;
-    if (elapsedTime < accelTime)  
+    if (elapsedTime >= 0 && elapsedTime < accelTime)  
        output = maxAcceleration * elapsedTime;  // v = at
     else if (elapsedTime < accelTime + cruiseTime) 
        output = maxVelocity; 
@@ -40,9 +47,9 @@ double TrapezoidalMotionProfile::calculateVelocity(double time){
 
 
 double TrapezoidalMotionProfile::calculateAcceleration(double time){ 
-  double elapsedTime = time - startingTimestamp; 
+  double elapsedTime = (time - startingTimestamp) / 1000; 
   double output;  
-  if (elapsedTime < accelTime)  
+  if (elapsedTime >= 0 && elapsedTime < accelTime)  
        output = maxAcceleration;  
   else if (elapsedTime < accelTime + cruiseTime) 
        output = 0; 
@@ -76,8 +83,8 @@ double TrapezoidalMotionProfile::convertPosToTime(double position){
 
 double TrapezoidalMotionProfile::calculatePosition(double time){ 
   double output;  
-  double elapsedTime = time - startingTimestamp; 
-  if (elapsedTime < accelDist){
+  double elapsedTime = (time - startingTimestamp) / 1000; 
+  if (elapsedTime >= 0 && elapsedTime < accelTime){
      output = (0.5 * maxAcceleration * pow(elapsedTime, 2)); // (1/2)at^2
   } else if (elapsedTime < accelTime + cruiseTime){
      output = (0.5 * maxAcceleration * pow(accelTime, 2)) + (maxVelocity * (elapsedTime - accelTime)); // vt
@@ -113,7 +120,7 @@ bool TrapezoidalMotionProfile::atGoal(double currentPosition, double currentVelo
 }; 
 
 double TrapezoidalMotionProfile::getTotalDuration(){ 
-   return accelTime + cruiseTime + decelTime;
+   return (accelTime + cruiseTime + decelTime) * 1000; //In millis
 }; 
 
 double TrapezoidalMotionProfile::getStartTime(){ 
@@ -122,12 +129,24 @@ double TrapezoidalMotionProfile::getStartTime(){
 
 double TrapezoidalMotionProfile::getAccelDist(){ 
    return accelDist;
-} 
+}  
+
+double TrapezoidalMotionProfile::getDecelDist(){ 
+   return decelDist;
+}
 
 double TrapezoidalMotionProfile::getCruiseDist(){ 
    return cruiseDist;
 } 
 
-TrapezoidConstants TrapezoidalMotionProfile::getConstants(){  
-   return consts;
+double TrapezoidalMotionProfile::getMaxVelocity(){ 
+   return maxVelocity;
+} 
+
+double TrapezoidalMotionProfile::getMaxAcceleration(){ 
+   return maxAcceleration;
+} 
+
+void TrapezoidalMotionProfile::setLastTimestamp(double timestamp){ 
+  this->startingTimestamp = timestamp;
 }

@@ -59,6 +59,7 @@ private:
   //vex::motor driveMidRight; 
   vex::motor driveBackRight;
   
+  CirclePath* testPath = nullptr;
 
   vex::motor_group leftDriveMotors; 
   vex::motor_group rightDriveMotors;   
@@ -67,8 +68,6 @@ private:
 
   TrapezoidConstants trapConsts; 
   
-  Path* testPath = nullptr; 
-
   double startX, startY;
   double linearSpeedFactor = 1; 
   double angularSpeedFactor = 1;  
@@ -79,7 +78,9 @@ private:
 
   static Location *locations[];    
   
-  void calibrate(Alignment_Structure struc);  
+  void calibrate(Alignment_Structure struc);   
+
+  double transformAngle(double heading);
 
 protected:
   using Subsystem::set;
@@ -94,7 +95,8 @@ public:
                                               {
                                                   (EntrySet){"Pos_X", EntryType::DOUBLE},
                                                   (EntrySet){"Pos_Y", EntryType::DOUBLE},
-                                                  (EntrySet){"Angle_Degrees_CCW", EntryType::DOUBLE}, 
+                                                  (EntrySet){"Angle_Degrees_CCW", EntryType::DOUBLE},  
+                                                  (EntrySet){"last_heading", EntryType::DOUBLE},
                                                   (EntrySet){"overheating", EntryType::BOOL}
                                               }), 
                                           //encoderLinear(vex::rotation(vex::PORT9)),
