@@ -150,22 +150,17 @@ void Drivebase::init()
    //--------------------------  >
  
    trapConsts.maxVelocity = ((MAX_RPM * (2 * DRIVE_WHEEL_RADIUS_MM * M_PI)) / 60.0 * 0.98);// * (MAX_RPM / 600.0));
-   trapConsts.maxAcceleration = trapConsts.maxVelocity / 0.95; // Reach max speed in 0.9 seconds    
+   trapConsts.maxAcceleration = trapConsts.maxVelocity * 0.9; // Reach max speed in 0.9 seconds    
 
    //-------------------------- 
+   
    array<double,2> sp = {get<double>("Pos_X"), get<double>("Pos_Y")}; 
-   array<double,2> ep = {TILE_SIZE_MM * 5.5, TILE_SIZE_MM * 2 - 500};
-   testPath = new CirclePath( 
-       sp, 
-       get<double>("Angle_Degrees_CCW"),  
-       ep, 
-       true,
-       pow(trapConsts.maxVelocity,2) / 500,  
-       trapConsts, 
-       turnPID
-   ); 
+   array<double,2> ep = {TILE_SIZE_MM * 5.2, TILE_SIZE_MM * 1.25};
 
-   testPath->init(Brain.Timer.time());
+
+   
+   //testPath->init(Brain.Timer.time());
+   
 
    //-------------------------- 
 
@@ -177,18 +172,19 @@ void Drivebase::init()
 void Drivebase::periodic()
 {        
    //arcadeDrive(((double)RobotState::getAxisState(AxisType::LEFT_VERTICAL))*-1, ((double)RobotState::getAxisState(AxisType::RIGHT_HORIZONTAL)));     
-   double timestamp = Brain.Timer.time();
+   /*
+   double timestamp = Brain.Timer.time(); 
    if (!testPath->completed(timestamp)){ 
       PathFrameOutput output = testPath->calculateFrameOutput( 
          get<double>("Pos_X"), 
          get<double>("Pos_Y"),  
          get<double>("Angle_Degrees_CCW"),  
          Brain.Timer.time()); 
-
       manualDriveWithCurvature(output.linearVelocity, output.angularVelocity);
    } else { 
       stop();
-   }
+   } 
+   */
 }
 
 void Drivebase::updateTelemetry()

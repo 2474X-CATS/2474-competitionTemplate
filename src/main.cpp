@@ -153,8 +153,8 @@ int main()
 
   //--------------------DONT MODIFY (MOSTLY)-----------------
 
-  Drivebase drive = Drivebase(TILE_SIZE_MM * 4, TILE_SIZE_MM * 2);  
-  
+  Drivebase drive = Drivebase(TILE_SIZE_MM * 3 + 200, 425);  
+
   //Intake intake;
   //Matchloader matchloader;
   //Hooks hooks;
@@ -256,12 +256,11 @@ int main()
 
  /*
  testAuto( 
-   { 
-    DrivePath::getCommand({TILE_SIZE_MM}, false, false)
-   },
+   closed_side_right(),
    false
- );     
- */
+ );    
+ */  
+ 
  
  
  

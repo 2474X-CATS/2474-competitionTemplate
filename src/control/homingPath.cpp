@@ -27,7 +27,19 @@ HomingPath::HomingPath(BezierCurve* curve, TrapezoidConstants motionConstants, P
 
 HomingPath::HomingPath(array<array<double,2>, 3> points, TrapezoidConstants motionConstants, PIDConstants pidconstants, double maxCentripAccel) 
 : HomingPath(new BezierCurve(points), motionConstants, pidconstants, TUNED_LDIST, TUNED_L_SCALE, maxCentripAccel, OPTIMUM_TOLERANCE)
-{};
+{}; 
+
+HomingPath::HomingPath(array<array<double,2>, 2> points, PathMetadata metadata) : 
+HomingPath( 
+   array<array<double,2>,3>{ 
+            array<double,2>{metadata.positionX, metadata.positionY},  
+            points[0],
+            points[1]
+   },
+   metadata.motionConstants, 
+   metadata.pidConstants, 
+   metadata.maximumCentripetalAcceleration
+){};
 
 PathFrameOutput HomingPath::calculateFrameOutput(double x, double y, double heading, double timestamp){ 
    

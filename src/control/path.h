@@ -16,6 +16,15 @@ typedef struct{
    double progressT; //Closest t point
 } BezierReferencePoint;
 
+typedef struct { 
+   PIDConstants pidConstants;  
+   TrapezoidConstants motionConstants; 
+   double maximumCentripetalAcceleration; 
+   double positionX; 
+   double positionY; 
+   double angleHeading;
+} PathMetadata;
+
 class HomingPath {   
 
    private:     
@@ -62,6 +71,8 @@ class HomingPath {
       HomingPath(BezierCurve* curve, TrapezoidConstants motionConstants, PIDConstants pidconstants, double lookAheadDistance, double k_scale, double maxCentripAccel, double distTolerance);    
       
       HomingPath(array<array<double,2>, 3> points, TrapezoidConstants motionConstants, PIDConstants pidconstants, double maxCentripAccel);
+      
+      HomingPath(array<array<double,2>, 2> points, PathMetadata metadata); 
 
       PathFrameOutput calculateFrameOutput(double x, double y, double heading, double timestamp); 
 
@@ -74,10 +85,17 @@ class HomingPath {
 class CirclePath {   
 
    private:     
-   
+
+      bool activated = false;
+      
+      double startingVelocity = 0; 
+      double endingVelocity = 0;  
+
+      double initialHeading;
+
       pidcontroller* turnController = nullptr; 
       TrapezoidalMotionProfile* profile = nullptr;   
-
+      
       double radius; 
       double lastTimestamp = -1;    
       double lastOmega = 0;
@@ -86,24 +104,40 @@ class CirclePath {
 
       bool straight = false; 
       int turningDirection = 0; 
-      int drivingDirection = 1;
-      
-      array<double, 2> startPoint; 
-      //array<double, 2> centroid;
+      int drivingDirection = 1; 
+
+      bool cuttingCorners;
       array<double, 2> endpoint;  
 
-      double projectedHeading;  
+      double projectedHeading;   
+
+      double endingHeading; 
       
-      double getAngularVelocity(double linearVelocity, double heading, double timestamp);   
+      double getAngularVelocity(double linearVelocity, double heading, double timestamp);    
+      
+      void setStartingVelocity(double velocity); 
+      void setEndingVelocity(double velocity); 
 
+      double getMaximumVelocity();  
 
+      double getEndpointX(); 
+      double getEndpointY(); 
+      double getEndingHeading();
+   
    public:  
       
-      CirclePath(array<double, 2> startingPoint, double heading, array<double, 2> endPoint, bool cuttingCorners, double maxCentripetalAcceleration, TrapezoidConstants consts, PIDConstants pidconsts);
+      CirclePath(array<double, 2> endPoint, bool cuttingCorners, PathMetadata metadata);
+      CirclePath(array<double,2> endPoint, bool cuttingCorners);
 
       PathFrameOutput calculateFrameOutput(double x, double y, double heading, double timestamp); 
+      
+      static void linkLeftToRight(CirclePath* path1, CirclePath* path2);  
 
-      void init(double stamp);  
+      void transformMetadata(PathMetadata metadata);
+
+      void activate(PathMetadata metadata);  
+      
+      void init(double timestamp);
 
       bool completed(double timestamp);   
 

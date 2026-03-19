@@ -101,7 +101,8 @@ bool DrivePath::isDriveOver()
 void DrivePath::initializeDrive()
 {
     isGoingForward = setpoints.at(operationsIndex) > 0;
-    drivingProfile = new TrapezoidalMotionProfile(drivebaseRef.getMotionConstants(), abs(setpoints.at(operationsIndex)));
+    drivingProfile = new TrapezoidalMotionProfile(drivebaseRef.getMotionConstants(), abs(setpoints.at(operationsIndex))); 
+    
     drivingProfile->setLastTimestamp(Brain.Timer.time());
 
     referenceAngle = drivebaseRef.get<double>("Angle_Degrees_CCW"); 
