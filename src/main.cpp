@@ -156,8 +156,8 @@ int main()
   //--------------------DONT MODIFY (MOSTLY)-----------------
 
   Drivebase drive = Drivebase(0,0);
-
-  Intake intake;
+  Intake intake; 
+  //Indexer indexer;
   Matchloader matchloader;
   Hooks hooks;
 
@@ -165,6 +165,7 @@ int main()
 
   RobotState::manuallyModifyState("color_sensitive", false);     // <- We don't have color-sort currently
   RobotState::manuallyModifyState("is_counterclockwise", false); // Adjust to match inertial sensor orientation
+  RobotState::manuallyModifyState("odometry_enabled", true); 
 
   //-------------------ROUTINE CREATION-------------------
 
@@ -229,17 +230,32 @@ int main()
   // startCommandSkillsMatch(auto_skills(), false);  //Uncomment when loading up for skills
   //testDrive(); // Uncomment when getting driver practice
 
+ //startCommandCompetitiveMatch(routines);  //Uncomment when loading up for a comp   
+ //startCommandSkillsMatch(auto_skills(), false);  //Uncomment when loading up for skills 
+ //testDrive();//Uncomment when getting driver practice 
+
+ 
+ testAuto(  
+  { 
+    FollowCirclePath::getCommand( 
+      { 
+        (BiarcEnum){array<double, 2>{TILE_SIZE_MM * 3.725, TILE_SIZE_MM * 1.6}, true}
+      }
+    )     
+  }
+  ,false);    
   
-  testAuto( 
-    {
-      FollowSplinePath::getCommand( 
-        array<array<double,2>,2>{ 
-          array<double,2>{TILE_SIZE_MM * 4.5, TILE_SIZE_MM * 1.5}, 
-          array<double,2>{TILE_SIZE_MM * 5, TILE_SIZE_MM * 1.25}
-        }
-      )
-    },
-    false
-  );
-  
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+    
+ 
+
+
 }

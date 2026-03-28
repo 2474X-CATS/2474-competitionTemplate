@@ -89,7 +89,7 @@ double CirclePath::getAngularVelocity(double linearVelocity, double heading, dou
     error = (360 - fabs(error)) * -1 * copysign(1, error);
   }
 
-  omega += turnController->calculate(error, timestamp); // Corrects for what the heading should be
+  //omega += turnController->calculate(error, timestamp); // Corrects for what the heading should be
 
   return omega;
 }
