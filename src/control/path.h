@@ -116,7 +116,7 @@ private:
    bool cuttingCorners;
    array<double, 2> endpoint;
 
-   double projectedHeading;
+   //double projectedHeading;
 
    double endingHeading;
 
@@ -126,7 +126,11 @@ private:
 
    double getEndpointX();
    double getEndpointY();
-   double getEndingHeading();
+   double getEndingHeading();  
+
+   double getDesiredHeading(double positionX, double positionY);
+
+   double calculateAngleCorrectionOutput(double positionX, double positionY, double heading, double timestamp);
 
 public:
    CirclePath(BiarcEnum biarc, PathMetadata metadata);

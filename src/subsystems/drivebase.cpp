@@ -16,7 +16,7 @@ double Drivebase::DRIVE_WHEEL_RADIUS_MM = 3.25 * 25.4 / 2; // 3.25in diam
 double Drivebase::MID_ALIGNER_LENGTH = 0;
 double Drivebase::HIGH_ALIGNER_LENGTH = 0;
 
-double Drivebase::MAX_RPM = (36.0 / 60.0) * 600; // Was 360
+double Drivebase::MAX_RPM = 360;
 
 Location *Drivebase::locations[14] = {
     new Location(
@@ -118,10 +118,31 @@ Location *Drivebase::locations[14] = {
         0,
         90)};
 
-void Drivebase::init()
-{
 
-   // encoderLinear.setPosition(0, vex::rotationUnits::rev);
+Drivebase::Drivebase(double startX, double startY) : Subsystem(
+                                                "drivebase",
+                                                { 
+                                                 (EntrySet){"Pos_X", EntryType::DOUBLE},
+                                                 (EntrySet){"Pos_Y", EntryType::DOUBLE},
+                                                 (EntrySet){"Angle_Degrees_CCW", EntryType::DOUBLE},
+                                                 (EntrySet){"last_heading", EntryType::DOUBLE},
+                                                 (EntrySet){"overheating", EntryType::BOOL}, 
+                                                 (EntrySet){"inst_speed", EntryType::DOUBLE}
+                                                }),
+                                            encoderLinear(vex::rotation(vex::PORT9)),
+                                            driveGyro(vex::inertial(vex::PORT16)),                  // Used to be port 16
+                                            driveFrontLeft(vex::motor(vex::PORT1, vex::ratio6_1)), // Used to be 1
+                                            driveMidLeft(vex::motor(vex::PORT2, vex::ratio6_1, true)),
+                                            driveBackLeft(vex::motor(vex::PORT3, vex::ratio6_1)),   // Used to be 3
+                                            driveFrontRight(vex::motor(vex::PORT4, vex::ratio6_1)), // Used to be 4
+                                            driveMidRight(vex::motor(vex::PORT5, vex::ratio6_1, true)),
+                                            driveBackRight(vex::motor(vex::PORT15, vex::ratio6_1)), // Used to be 15
+                                            leftDriveMotors(vex::motor_group(driveFrontLeft, driveBackLeft, driveMidLeft)),
+                                            rightDriveMotors(vex::motor_group(driveFrontRight, driveBackRight, driveMidRight))
+  {
+   globalRef = this;  
+
+   encoderLinear.setPosition(0, vex::rotationUnits::rev);
    // encoderAngular.setPosition(0, vex::rotationUnits::rev);
 
    leftDriveMotors.setStopping(vex::brakeType::coast);
@@ -134,51 +155,59 @@ void Drivebase::init()
       vex::this_thread::yield();
    }
 
-   driveGyro.setHeading(90, vex::rotationUnits::deg);
-
-   set<double>("last_heading", driveGyro.heading(vex::rotationUnits::deg));
-   set<double>("Angle_Degrees_CCW", 90);
-
-   setStartingPos(startX, startY);
-
    //------------------------------
 
-   correctivePID.P = 1;
+   correctivePID.P = 0.6;
    correctivePID.I = 0.0;
    correctivePID.D = 0.025;
    correctivePID.errorTolerance = 0;
 
-   //--------------------------  > 
+   //-------------------------- > 
    
-   turnPID.P = 2.6; 
+   turnPID.P = 2.4; 
    turnPID.I = 0.00; 
-   turnPID.D = 0.00; 
+   turnPID.D = 0.001; 
    turnPID.errorTolerance = 0.5;
 
    //-------------------------- >
 
-   trapConsts.maxVelocity = ((MAX_RPM * (2 * DRIVE_WHEEL_RADIUS_MM * M_PI)) / 60.0); // * (MAX_RPM / 600.0));
-   trapConsts.maxAcceleration = trapConsts.maxVelocity * 0.9;                               // Reach max speed in 0.9 seconds
+   trapConsts.maxVelocity = MAX_RPM * (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) / 60.0;
+   trapConsts.maxAcceleration = trapConsts.maxVelocity / 0.95;                        // Reach max speed in 0.9 seconds 
 
-   //--------------------------
+   setStartingPos(startX, startY); 
 
-   //--------------------------
+   driveGyro.setHeading(90, vex::rotationUnits::deg);
 
-   lastTimestamp = Brain.Timer.time(vex::sec);
+   set<double>("last_heading", driveGyro.heading(vex::rotationUnits::deg));
+   set<double>("Angle_Degrees_CCW", 90); 
+
+  };
+
+
+void Drivebase::init()
+{
+   lastTimestamp = Brain.Timer.time(vex::sec); 
+   startingTimestamp = Brain.Timer.time(vex::sec);
 };
 
 void Drivebase::periodic()
 {
    arcadeDrive(((double)RobotState::getAxisState(AxisType::LEFT_VERTICAL))*-1, ((double)RobotState::getAxisState(AxisType::RIGHT_HORIZONTAL)));
+   /*
+   if (Brain.Timer.time(vex::sec) - startingTimestamp < 2){ 
+      manualDriveForward(TILE_SIZE_MM, -1);
+   } else { 
+      stop();
+   } 
+   */
 }
 
 void Drivebase::updateTelemetry()
 {
 
    double x = get<double>("Pos_X");
-   double y = get<double>("Pos_Y");
-
-   // double angle = get<double>("Angle_Degrees_CCW");
+   double y = get<double>("Pos_Y");  
+   double hypotenuse = 0;
 
    if (RobotState::getStateOf("ready"))
    {
@@ -191,25 +220,26 @@ void Drivebase::updateTelemetry()
 
       leftDriveMotors.setStopping(vex::brakeType::brake);
       rightDriveMotors.setStopping(vex::brakeType::brake);
+      
+      if (RobotState::getStateOf("odometry_enabled")){ 
+         hypotenuse = -((encoderLinear.velocity(vex::velocityUnits::rpm) * 2 * M_PI * ENCODER_WHEEL_LIN_RADIUS_MM) / 60 * deltaTime);
+         //hypotenuse = ((leftDriveMotors.velocity(vex::velocityUnits::rpm) - rightDriveMotors.velocity(vex::velocityUnits::rpm)) / 2) * 2 * M_PI * DRIVE_WHEEL_RADIUS_MM / 60 * deltaTime * (MAX_RPM / 600);
+         if (RobotState::getStateOf("is_drive_inverted"))
+         {
+           hypotenuse *= -1;
+         }
+         double angleRadians = transformAngle(get<double>("last_heading")) * (2 * M_PI) / 360; 
 
-      double hypotenuse;
-      // hypotenuse = -((encoderLinear.velocity(vex::velocityUnits::rpm) * 2 * M_PI * ENCODER_WHEEL_LIN_RADIUS_MM) / 60 * deltaTime);
-      hypotenuse = ((leftDriveMotors.velocity(vex::velocityUnits::rpm) - rightDriveMotors.velocity(vex::velocityUnits::rpm)) / 2) * 2 * M_PI * DRIVE_WHEEL_RADIUS_MM / 60 * deltaTime * (MAX_RPM / 600);
-      if (RobotState::getStateOf("is_drive_inverted"))
-      {
-         hypotenuse *= -1;
+          x += (hypotenuse * cos(angleRadians));
+          y += (hypotenuse * sin(angleRadians));
       }
-
-      double angleRadians = transformAngle(get<double>("last_heading")) * (2 * M_PI) / 360;
-
-      x += (hypotenuse * cos(angleRadians));
-      y += (hypotenuse * sin(angleRadians));
-
+      
       set<double>("last_heading", angle);
    }
 
    set<double>("Pos_X", x);
    set<double>("Pos_Y", y);
+   set<double>("inst_speed", hypotenuse);
 
    if (RobotState::getStateOf("k_calibrating"))
    {
@@ -222,11 +252,10 @@ void Drivebase::updateTelemetry()
       }
    }
 
-   /*
+   
    Brain.Screen.printAt(20, 150, "Pos X: %.2f", get<double>("Pos_X"));
    Brain.Screen.printAt(20, 175, "Pos Y: %.2f", get<double>("Pos_Y"));
    Brain.Screen.printAt(20, 200, "Angle Degrees: %.2f", get<double>("Angle_Degrees_CCW"));
-   */
 
    lastTimestamp = Brain.Timer.time(vex::sec);
 };
@@ -268,8 +297,7 @@ void Drivebase::manualDriveForward(double speedMM, double centerAngle)
       speedMM *= -1;
    }
 
-   double netSpeed = speedMM / (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) * 60;
-   netSpeed *= (600.0 / MAX_RPM);
+   double netSpeed = speedMM / (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) * 60 * (600.0 / MAX_RPM);
 
    double angleCorrection = 0;
 
@@ -504,6 +532,6 @@ PathMetadata Drivebase::getPathMetadata(){
    data.angleHeading = get<double>("Angle_Degrees_CCW"); 
    data.pidConstants = correctivePID; 
    data.motionConstants = trapConsts; 
-   data.maximumCentripetalAcceleration = pow(trapConsts.maxVelocity,2) / 500.0; 
+   data.maximumCentripetalAcceleration = pow(trapConsts.maxVelocity,2) / 1000.0; 
    return data;
 }

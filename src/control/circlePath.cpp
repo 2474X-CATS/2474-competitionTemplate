@@ -14,18 +14,20 @@ CirclePath::CirclePath(BiarcEnum biarc)
 
 void CirclePath::activate(PathMetadata metadata)
 {
+  //this->projectedHeading = metadata.angleHeading;
+  double dist = hypot(metadata.positionX - endpoint[0], metadata.positionY - endpoint[1]); 
 
-  this->projectedHeading = metadata.angleHeading;
-  double dist = hypot(metadata.positionX - endpoint[0], metadata.positionY - endpoint[1]);
-  double targetHeading = fmod((atan2(endpoint[1] - metadata.positionY, endpoint[0] - metadata.positionX)) / M_PI * 180 + 360, 360);
-  double angleDiff = targetHeading - metadata.angleHeading;
+  double targetHeading = fmod((atan2(endpoint[1] - metadata.positionY, endpoint[0] - metadata.positionX)) / M_PI * 180 + 360, 360); 
+
+  double angleDiff = targetHeading - metadata.angleHeading; 
+
   if (fabs(angleDiff) > 180)
   {
     angleDiff = (360 - fabs(angleDiff)) * -1 * copysign(1, angleDiff);
   }
   if (fabs(angleDiff) > 90 && cuttingCorners)
   {
-    angleDiff = fmod((180 - fabs(angleDiff)) * -1 * copysign(1, angleDiff), 180);
+    angleDiff = fmod((180 - fabs(angleDiff)) * -1 * copysign(1, angleDiff), 180); 
     drivingDirection = -1;
   }
   if (fabs(angleDiff) < 1e-6)
@@ -36,14 +38,14 @@ void CirclePath::activate(PathMetadata metadata)
     this->endingHeading = metadata.angleHeading;
   }
   else
-  {    
-    this->endingHeading = fmod(metadata.angleHeading + angleDiff * 2 + 360, 360); 
+  {     
     angleDiff = angleDiff / 180 * M_PI;
     this->turningDirection = static_cast<int>(copysign(1, angleDiff));
     this->radius = dist / (2 * sin(angleDiff / 2));
     this->arcLength = fabs(this->radius * angleDiff);
-    this->radius /= 2;   
+    this->radius /= 2;  
     
+    this->endingHeading = fmod(metadata.angleHeading + angleDiff + 360, 360);
   }
 
   metadata.motionConstants.maxVelocity = std::min<double>(
@@ -69,29 +71,32 @@ bool CirclePath::completed(double timestamp)
   return (timestamp - profile->getStartTime()) > profile->getTotalDuration();
 }
 
-double CirclePath::getAngularVelocity(double linearVelocity, double heading, double timestamp)
-{
+double CirclePath::getDesiredHeading(double positionX, double positionY){ 
+  double distance = hypot(positionX - endpoint.at(0), positionY - endpoint.at(1));  
+  double angleDiff = (2 * asin(distance / (2 * radius))) / M_PI * 180;  
+  return fmod(endingHeading - angleDiff + 360, 360);
+}
 
+double CirclePath::calculateAngleCorrectionOutput(double positionX, double positionY, double heading, double timestamp){ 
+  if (straight){ 
+    return 0;
+  }
+  double desiredHeading = getDesiredHeading(positionX, positionY); 
+  double angleDiff = desiredHeading - heading; 
+  if (angleDiff > 180 || angleDiff < -180){ 
+    angleDiff = (360 - fabs(angleDiff)) * -1 * copysign(angleDiff);
+  } 
+  return turnController->calculate(angleDiff, timestamp);
+}
+
+double CirclePath::getAngularVelocity(double linearVelocity)
+{
   if (straight)
   {
     return 0;
   }
 
-  this->projectedHeading += this->lastOmega * ((timestamp - lastTimestamp) / 1000);
-
-  double omega = fabs((linearVelocity / this->radius) / M_PI * 180) * turningDirection; // What the angular velocity should be
-  this->lastOmega = omega;
-
-  double error = this->projectedHeading - heading; // Now we can update the projected heading
-
-  if (fabs(error) > 180)
-  {
-    error = (360 - fabs(error)) * -1 * copysign(1, error);
-  }
-
-  omega += turnController->calculate(error, timestamp); // Corrects for what the heading should be
-
-  return omega;
+  return fabs((linearVelocity / this->radius) / M_PI * 180) * turningDirection; 
 }
 
 PathFrameOutput CirclePath::calculateFrameOutput(double x, double y, double heading, double timestamp)
@@ -100,7 +105,7 @@ PathFrameOutput CirclePath::calculateFrameOutput(double x, double y, double head
   if (activated)
   {
     output.linearVelocity = profile->generateSetpoint(timestamp).velocity * drivingDirection;
-    output.angularVelocity = getAngularVelocity(output.linearVelocity, heading, timestamp);
+    output.angularVelocity = getAngularVelocity(output.linearVelocity) + calculateAngleCorrectionOutput(x, y, heading, timestamp);
     this->lastTimestamp = timestamp;
   }
   return output;

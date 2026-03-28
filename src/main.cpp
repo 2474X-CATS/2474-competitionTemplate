@@ -156,8 +156,8 @@ int main()
   //--------------------DONT MODIFY (MOSTLY)-----------------
 
   Drivebase drive = Drivebase(0,0);
-
-  Intake intake;
+  Intake intake; 
+  Indexer indexer;
   Matchloader matchloader;
   Hooks hooks;
 
@@ -165,6 +165,7 @@ int main()
 
   RobotState::manuallyModifyState("color_sensitive", false);     // <- We don't have color-sort currently
   RobotState::manuallyModifyState("is_counterclockwise", false); // Adjust to match inertial sensor orientation
+  RobotState::manuallyModifyState("odometry_enabled", true); 
 
   //-------------------ROUTINE CREATION-------------------
 
@@ -231,14 +232,35 @@ int main()
 
  //startCommandCompetitiveMatch(routines);  //Uncomment when loading up for a comp   
  //startCommandSkillsMatch(auto_skills(), false);  //Uncomment when loading up for skills 
- testDrive();//Uncomment when getting driver practice 
+ //testDrive();//Uncomment when getting driver practice 
 
- /*
- testAuto( 
-   renegade_right(),
-   false
- );    
- */
+
+ testAuto(  
+  { 
+    FollowCirclePath::getCommand( 
+      { 
+        (BiarcEnum){array<double, 2>{TILE_SIZE_MM * 3.725, TILE_SIZE_MM * 1.6}, true}
+      }, 
+      true
+    ),     
+    DriveForwardForTime::getCommand(0.25, 1000, true),
+    DeployMatchloader::getCommand(true), 
+    
+    DriveToSetpoint::getCommand(TILE_SIZE_MM * 5 + 30, TILE_SIZE_MM, -1, PathType::EUCLIDEAN, false),
+    DrivePath::getCommand({270}, true, false),  
+    //WaitFor::getCommand(500),
+    DriveForwardForTime::getCommand(0.25, 750, true), 
+    IntakeCubes::getCommand(1000), 
+    ModifyRobotState::getCommand("is_drive_inverted", true), 
+    CloseDistanceBetween(Zones::NAT_HIGH_RIGHT, TILE_SIZE_MM * 0.05, 0, 0),   
+    Calibrate::getCommand(Alignment_Structure::NEARBY_HIGH_RIGHT, 0.25, 250),
+    ScoreOnGoal::getCommand(Goal_Pos::HIGH_GOAL, 2500) 
+    
+  }
+  ,false);    
+
+ 
+ 
  
  
  
