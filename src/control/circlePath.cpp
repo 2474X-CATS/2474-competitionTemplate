@@ -42,6 +42,7 @@ void CirclePath::activate(PathMetadata metadata)
     this->radius = dist / (sin(angleDiff));
     this->arcLength = fabs(this->radius * angleDiff);
     this->radius /= 2;  
+    this->radius /= 2;  
     
     this->endingHeading = angleSum(metadata.angleHeading, angleDiff);
   }

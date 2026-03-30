@@ -53,9 +53,11 @@ private:
 
   vex::motor driveFrontLeft;
   vex::motor driveMidLeft;
+  vex::motor driveMidLeft;
   vex::motor driveBackLeft;
 
   vex::motor driveFrontRight;
+  vex::motor driveMidRight;
   vex::motor driveMidRight;
   vex::motor driveBackRight;
 
@@ -66,10 +68,13 @@ private:
   PIDConstants correctivePID;
 
   TrapezoidConstants trapConsts; 
+  TrapezoidConstants trapConsts; 
 
   double linearSpeedFactor = 1;
   double angularSpeedFactor = 1;
 
+  double lastTimestamp = 0; 
+  double startingTimestamp = 0;
   double lastTimestamp = 0; 
   double startingTimestamp = 0;
 
@@ -89,6 +94,7 @@ public:
 
   static Drivebase *globalRef;
 
+  Drivebase(double startX, double startY);
   Drivebase(double startX, double startY);
 
   void init() override;

@@ -19,6 +19,7 @@ double Drivebase::MID_ALIGNER_LENGTH = 0;
 double Drivebase::HIGH_ALIGNER_LENGTH = 0;
 
 double Drivebase::MAX_RPM = 360;
+double Drivebase::MAX_RPM = 360;
 
 Location *Drivebase::locations[14] = {
     new Location(
@@ -166,9 +167,12 @@ Drivebase::Drivebase(double startX, double startY) : Subsystem(
    correctivePID.errorTolerance = 0;
 
    //-------------------------- > 
+   //-------------------------- > 
    
    turnPID.P = 2.4; 
+   turnPID.P = 2.4; 
    turnPID.I = 0.00; 
+   turnPID.D = 0.001; 
    turnPID.D = 0.001; 
    turnPID.errorTolerance = 0.5;
 
@@ -192,6 +196,13 @@ Drivebase::Drivebase(double startX, double startY) : Subsystem(
 void Drivebase::periodic()
 {
    arcadeDrive(((double)RobotState::getAxisState(AxisType::LEFT_VERTICAL))*-1, ((double)RobotState::getAxisState(AxisType::RIGHT_HORIZONTAL)));
+   /*
+   if (Brain.Timer.time(vex::sec) - startingTimestamp < 2){ 
+      manualDriveForward(TILE_SIZE_MM, -1);
+   } else { 
+      stop();
+   } 
+   */
 }
 
 void Drivebase::updateTelemetry()
@@ -305,6 +316,7 @@ void Drivebase::manualDriveForward(double speedMM, double centerAngle)
       speedMM *= -1;
    }
 
+   double netSpeed = speedMM / (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) * 60 * (600.0 / MAX_RPM);
    double netSpeed = speedMM / (DRIVE_WHEEL_RADIUS_MM * 2 * M_PI) * 60 * (600.0 / MAX_RPM);
 
    double angleCorrection = 0;
@@ -529,6 +541,7 @@ PathMetadata Drivebase::getPathMetadata(){
    data.angleHeading = get<double>("Angle_Degrees_CCW"); 
    data.pidConstants = correctivePID; 
    data.motionConstants = trapConsts; 
+   data.maximumCentripetalAcceleration = pow(trapConsts.maxVelocity,2) / 1000.0; 
    data.maximumCentripetalAcceleration = pow(trapConsts.maxVelocity,2) / 1000.0; 
    return data;
 }

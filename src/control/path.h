@@ -121,11 +121,13 @@ private:
    double endingHeading;
 
    double getAngularVelocity(double linearVelocity);
+   double getAngularVelocity(double linearVelocity);
 
    double getMaximumVelocity();
 
    double getEndpointX();
    double getEndpointY();
+   double getEndingHeading();  
    double getEndingHeading();  
 
 
