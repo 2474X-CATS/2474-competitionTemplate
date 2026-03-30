@@ -129,7 +129,8 @@ Drivebase::Drivebase(double startX, double startY) : Subsystem(
                                                  (EntrySet){"Angle_Degrees_CCW", EntryType::DOUBLE},
                                                  (EntrySet){"last_heading", EntryType::DOUBLE},
                                                  (EntrySet){"overheating", EntryType::BOOL}, 
-                                                 (EntrySet){"inst_speed", EntryType::DOUBLE}
+                                                 (EntrySet){"Instantaneous_Speed", EntryType::DOUBLE}, 
+                                                 (EntrySet){"Angular_Velocity", EntryType::DOUBLE}
                                                 }),
                                             encoderLinear(vex::rotation(vex::PORT9)),
                                             driveGyro(vex::inertial(vex::PORT16)),                  // Used to be port 16
@@ -178,20 +179,19 @@ Drivebase::Drivebase(double startX, double startY) : Subsystem(
 
    //--------------------------
    
-   turningProfile = new TrapezoidalMotionProfile(trapConsts, TILE_SIZE_MM);  
-   turningCont = new errorcontroller(correctivePID); 
+   //turningProfile = new TrapezoidalMotionProfile(trapConsts, TILE_SIZE_MM);  
+   //turningCont = new errorcontroller(correctivePID); 
 
    //--------------------------
 
    lastTimestamp = Brain.Timer.time(vex::sec); 
-   turningProfile->setLastTimestamp(lastTimestamp * 1000);  
-   turningCont->setLastTimestamp(lastTimestamp * 1000); 
+   //turningProfile->setLastTimestamp(lastTimestamp * 1000);  
+   //turningCont->setLastTimestamp(lastTimestamp * 1000); 
 };
 
 void Drivebase::periodic()
 {
    arcadeDrive(((double)RobotState::getAxisState(AxisType::LEFT_VERTICAL))*-1, ((double)RobotState::getAxisState(AxisType::RIGHT_HORIZONTAL)));
-   
 }
 
 void Drivebase::updateTelemetry()
@@ -229,22 +229,23 @@ void Drivebase::updateTelemetry()
       if (RobotState::getStateOf("is_drive_inverted"))
       {
          hypotenuse *= -1;
-      }  
+      }   
 
       set<double>("Instantaneous_Speed", fabs(hypotenuse) / deltaTime);
 
+
       double angleRadians = toRadians(transformAngle(get<double>("last_heading"))); // * (2 * M_PI) / 360;
 
-          x += (hypotenuse * cos(angleRadians));
-          y += (hypotenuse * sin(angleRadians));
-      }
-      
-      set<double>("last_heading", angle);
+      x += (hypotenuse * cos(angleRadians));
+      y += (hypotenuse * sin(angleRadians)); 
+
+      set<double>("last_heading", angle); 
    }
+      
 
    set<double>("Pos_X", x);
    set<double>("Pos_Y", y);
-   set<double>("inst_speed", hypotenuse);
+   
 
    if (RobotState::getStateOf("k_calibrating"))
    {
@@ -260,11 +261,12 @@ void Drivebase::updateTelemetry()
    
    //Brain.Screen.printAt(20, 150, "Linear Velocity: %.2f", get<double>("Instantaneous_Speed"));
    //Brain.Screen.printAt(20, 175, "Angular Velocity: %.2f", get<double>("Angular_Velocity"));
-   Brain.Screen.printAt(20, 200, "Angle Degrees: %.2f", get<double>("Angle_Degrees_CCW"));
+   //Brain.Screen.printAt(20, 200, "Angle Degrees: %.2f", get<double>("Angle_Degrees_CCW"));
    
 
    lastTimestamp = Brain.Timer.time(vex::sec);
-};
+}; 
+
 
 Location *Drivebase::getLocation(int index)
 {

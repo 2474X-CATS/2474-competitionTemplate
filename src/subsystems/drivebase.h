@@ -37,7 +37,8 @@ typedef enum
 class Drivebase : public Subsystem
 { 
 
-private:
+private: 
+
   static double ENCODER_WHEEL_ROT_RADIUS_MM;
   static double ENCODER_WHEEL_LIN_RADIUS_MM;
   static double ENCODER_DIST_FROM_CENTER;
@@ -47,7 +48,6 @@ private:
   static double MAX_RPM;
 
   vex::rotation encoderLinear;
-  //vex::rotation encoderAngular;
 
   vex::inertial driveGyro;
 
@@ -110,7 +110,8 @@ public:
   void setCalibratingStructure(Alignment_Structure struc);
   void setStartingPos(double x, double y);
 
-  static Location *getLocation(int index);
+  static Location *getLocation(int index); 
+  
   PIDConstants getTurningPID();
   TrapezoidConstants getMotionConstants(); 
   PathMetadata getPathMetadata(); 
