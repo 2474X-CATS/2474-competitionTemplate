@@ -45,11 +45,12 @@ private:
   static double DRIVE_WHEEL_RADIUS_MM;
   static double MID_ALIGNER_LENGTH;
   static double HIGH_ALIGNER_LENGTH;
-  static double MAX_RPM;
+  static double MAX_RPM; 
+  static double ROBOT_WHEEL_BASE;
 
-  vex::rotation encoderLinear;
+  //vex::rotation encoderLinear;
+  //vex::inertial driveGyro; 
 
-  vex::inertial driveGyro;
 
   vex::motor driveFrontLeft;
   vex::motor driveMidLeft;
@@ -62,16 +63,19 @@ private:
   vex::motor_group leftDriveMotors;
   vex::motor_group rightDriveMotors;
 
-  PIDConstants turnPID; 
-  PIDConstants correctivePID;
+  PIDConstants turnPID;  
 
-  TrapezoidConstants trapConsts; 
+  PIDConstants correctiveTurnPID; 
+  PIDConstants correctiveLinPID; 
+
+  TrapezoidConstants trapConsts;  
+
+  TrapezoidalMotionProfile* motionProf = nullptr;
  
   double linearSpeedFactor = 1;
   double angularSpeedFactor = 1;
 
   double lastTimestamp = 0; 
-  
 
   Alignment_Structure calibratingWall = Alignment_Structure::NONE;
 
@@ -79,7 +83,9 @@ private:
 
   void calibrate(Alignment_Structure struc);
 
-  double transformAngle(double heading);
+  double transformAngle(double heading); 
+
+  double startingTimestamp;
 
 protected:
   using Subsystem::set;
@@ -111,7 +117,11 @@ public:
 
   static Location *getLocation(int index); 
   
-  PIDConstants getTurningPID();
+  PIDConstants getTurningPID(); 
+
+  PIDConstants getCorrectiveTurnPID(); 
+  PIDConstants getCorrectiveLinearPID(); 
+
   TrapezoidConstants getMotionConstants(); 
   PathMetadata getPathMetadata(); 
 

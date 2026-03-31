@@ -54,7 +54,11 @@ protected:
   bool turningFirst;
   bool intaking;
 
-  pidcontroller *turnPID = nullptr;
+  pidcontroller *turnPID = nullptr; 
+
+  errorcontroller* correctiveAngularController = nullptr;
+  errorcontroller* correctiveLinearController = nullptr;
+
   TrapezoidalMotionProfile *drivingProfile = nullptr;
 
   bool initialized = false;

@@ -6,7 +6,7 @@ double HomingPath::TUNED_LDIST = hypot(ROBOT_LENGTH_MM * 1.5, ROBOT_WIDTH_MM * 1
 double HomingPath::TUNED_L_SCALE = 0.35;
 double HomingPath::OPTIMUM_TOLERANCE = 75;
 
-HomingPath::HomingPath(BezierCurve *curve, TrapezoidConstants motionConstants, PIDConstants pidconstants, double lookAheadDistance, double k_scale, double maxCentripAccel, double distTolerance)
+HomingPath::HomingPath(BezierCurve *curve, TrapezoidConstants motionConstants, PIDConstants correctiveAng, PIDConstants correctiveLin, double lookAheadDistance, double k_scale, double maxCentripAccel, double distTolerance)
 {
 
    this->curve = curve;
@@ -22,12 +22,14 @@ HomingPath::HomingPath(BezierCurve *curve, TrapezoidConstants motionConstants, P
 
    this->endpoint = curve->generatePoint(1);
 
-   this->curveProfile = new TrapezoidalMotionProfile(motionConstants, curve->getPathLength());
-   this->turnController = new errorcontroller(pidconstants);
+   this->curveProfile = new TrapezoidalMotionProfile(motionConstants, curve->getPathLength()); 
+
+   this->omegaController = new errorcontroller(correctiveAng); 
+   this->alphaController = new errorcontroller(correctiveLin); 
 }
 
-HomingPath::HomingPath(array<array<double, 2>, 3> points, TrapezoidConstants motionConstants, PIDConstants pidconstants, double maxCentripAccel)
-    : HomingPath(new BezierCurve(points), motionConstants, pidconstants, TUNED_LDIST, TUNED_L_SCALE, maxCentripAccel, OPTIMUM_TOLERANCE) {};
+HomingPath::HomingPath(array<array<double, 2>, 3> points, TrapezoidConstants motionConstants, PIDConstants correctiveAng, PIDConstants correctiveLin, double maxCentripAccel)
+    : HomingPath(new BezierCurve(points), motionConstants, correctiveAng, correctiveLin, TUNED_LDIST, TUNED_L_SCALE, maxCentripAccel, OPTIMUM_TOLERANCE) {};
 
 HomingPath::HomingPath(array<array<double, 2>, 2> points, PathMetadata metadata) : HomingPath(
                                                                                        array<array<double, 2>, 3>{
@@ -35,17 +37,19 @@ HomingPath::HomingPath(array<array<double, 2>, 2> points, PathMetadata metadata)
                                                                                            points[0],
                                                                                            points[1]},
                                                                                        metadata.motionConstants,
-                                                                                       metadata.pidConstants,
+                                                                                       metadata.correctiveTurnConstants, 
+                                                                                       metadata.correctiveLinConstants,
                                                                                        metadata.maximumCentripetalAcceleration) {};
 
-PathFrameOutput HomingPath::calculateFrameOutput(double x, double y, double heading, double angularVelocity, double timestamp)
+PathFrameOutput HomingPath::calculateFrameOutput(double x, double y, double heading, double linearVelocity, double angularVelocity, double timestamp)
 {
 
    PathFrameOutput res;
    BezierReferencePoint refPoint = findReferencePoint(x, y, getOptimumLookaheadDist(lastVelocity));
    
-   double correctiveOmega = turnController->calculate(angularVelocity, timestamp);
-   
+   double correctiveOmega = omegaController->calculate(angularVelocity, timestamp);
+   double correctiveAlpha = alphaController->calculate(linearVelocity, timestamp);
+
    double deltaTime = (timestamp - lastTimestamp) / 1000;
 
    double dist = hypot(x - refPoint.point[0], y - refPoint.point[1]); 
@@ -58,10 +62,11 @@ PathFrameOutput HomingPath::calculateFrameOutput(double x, double y, double head
    double linearVelo = std::min<double>(lastVelocity + (getAcceleration() * deltaTime), deriveMaxVelocity(radius * 2)); 
    double angularVelo = 2 * toDegrees(linearVelo / radius) * copysign(1, angleDiff); 
 
-   turnController->setReference(angularVelo);
+   omegaController->setReference(angularVelo); 
+   alphaController->setReference(linearVelo);
 
    res.angularVelocity = angularVelo + correctiveOmega;
-   res.linearVelocity = linearVelo;
+   res.linearVelocity = linearVelo + correctiveAlpha;
 
    lastVelocity = linearVelo;
    lastTimestamp = timestamp;
@@ -149,7 +154,8 @@ void HomingPath::init(double timestamp)
 {
    this->lastTimestamp = timestamp;
    this->curveProfile->setLastTimestamp(timestamp);
-   this->turnController->setLastTimestamp(timestamp);
+   this->omegaController->setLastTimestamp(timestamp); 
+   this->alphaController->setLastTimestamp(timestamp);
 }
 
 TrapezoidalMotionProfile *HomingPath::getProfile()

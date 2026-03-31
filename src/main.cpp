@@ -156,10 +156,10 @@ int main()
   //--------------------DONT MODIFY (MOSTLY)-----------------
 
   Drivebase drive = Drivebase(0,0);
-  Intake intake; 
-  Indexer indexer;
-  Matchloader matchloader;
-  Hooks hooks;
+  //Intake intake; 
+  //Indexer indexer;
+  //Matchloader matchloader;
+  //Hooks hooks;
 
   robot.initialize();
 
@@ -228,9 +228,9 @@ int main()
 
   //startCommandCompetitiveMatch(routines);  //Uncomment when loading up for a comp
   //startCommandSkillsMatch(auto_skills(), false);  //Uncomment when loading up for skills
-  //testDrive(); // Uncomment when getting driver practice
+  testDrive(); // Uncomment when getting driver practice
   
-  
+  /*
   testAuto( 
     {    
       FollowCirclePath::getCommand( 
@@ -253,7 +253,8 @@ int main()
       ),
     }, 
     false
-  );
+  ); 
+  */
   
 
 

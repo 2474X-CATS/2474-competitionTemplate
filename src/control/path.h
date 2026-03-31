@@ -21,7 +21,8 @@ typedef struct
 
 typedef struct
 {
-   PIDConstants pidConstants;
+   PIDConstants correctiveTurnConstants; 
+   PIDConstants correctiveLinConstants;
    TrapezoidConstants motionConstants;
    double maximumCentripetalAcceleration;
    double positionX;
@@ -39,7 +40,8 @@ private:
 
    BezierCurve *curve = nullptr; 
 
-   errorcontroller *turnController = nullptr; 
+   errorcontroller *omegaController = nullptr; 
+   errorcontroller *alphaController = nullptr; 
 
    TrapezoidalMotionProfile *curveProfile = nullptr;
 
@@ -74,13 +76,13 @@ private:
    BezierCurve *getCurve();
 
 public:
-   HomingPath(BezierCurve *curve, TrapezoidConstants motionConstants, PIDConstants pidconstants, double lookAheadDistance, double k_scale, double maxCentripAccel, double distTolerance);
+   HomingPath(BezierCurve *curve, TrapezoidConstants motionConstants, PIDConstants correctiveAng, PIDConstants correctiveLin, double lookAheadDistance, double k_scale, double maxCentripAccel, double distTolerance);
 
-   HomingPath(array<array<double, 2>, 3> points, TrapezoidConstants motionConstants, PIDConstants pidconstants, double maxCentripAccel);
+   HomingPath(array<array<double, 2>, 3> points, TrapezoidConstants motionConstants, PIDConstants correctiveAng, PIDConstants correctiveLin, double maxCentripAccel);
 
    HomingPath(array<array<double, 2>, 2> points, PathMetadata metadata);
 
-   PathFrameOutput calculateFrameOutput(double x, double y, double heading, double angularVelocity, double timestamp);
+   PathFrameOutput calculateFrameOutput(double x, double y, double heading, double linearVelocity, double angularVelocity, double timestamp);
 
    void init(double timestamp);
 
@@ -100,9 +102,11 @@ private:
 
    double startingVelocity = 0;
    double endingVelocity = 0;
-
-   errorcontroller *turnController = nullptr;
-   TrapezoidalMotionProfile *profile = nullptr;
+   
+   errorcontroller *omegaController = nullptr; 
+   errorcontroller *alphaController = nullptr; 
+   
+   TrapezoidalMotionProfile *profile = nullptr; 
 
    double radius;
    double lastTimestamp = -1;
@@ -132,7 +136,7 @@ public:
    CirclePath(BiarcEnum biarc, PathMetadata metadata);
    CirclePath(BiarcEnum biarc);
 
-   PathFrameOutput calculateFrameOutput(double angularVelocity, double timestamp);
+   PathFrameOutput calculateFrameOutput(double linearVelocity, double angularVelocity, double timestamp);
 
    static void linkLeftToRight(CirclePath *path1, CirclePath *path2);
 

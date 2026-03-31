@@ -384,7 +384,8 @@ void FollowCirclePath::periodic(){
             initialized = false; 
             index++;
         } else { 
-            PathFrameOutput output = segments.at(index).calculateFrameOutput( 
+            PathFrameOutput output = segments.at(index).calculateFrameOutput(  
+                drivebaseRef.get<double>("Linear_Velocity"),
                 drivebaseRef.get<double>("Angular_Velocity"), 
                 timestamp
             ); 
@@ -419,6 +420,7 @@ void FollowSplinePath::periodic(){
         drivebaseRef.get<double>("Pos_X"), 
         drivebaseRef.get<double>("Pos_Y"), 
         drivebaseRef.get<double>("Angle_Degrees_CCW"),  
+        drivebaseRef.get<double>("Linear_Velocity"),
         drivebaseRef.get<double>("Angular_Velocity"),
         Brain.Timer.time()
     ); 
@@ -433,7 +435,6 @@ bool FollowSplinePath::isOver(){
 void FollowSplinePath::end(){ 
     drivebaseRef.stop();
 }
-
 
 
 

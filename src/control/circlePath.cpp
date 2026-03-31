@@ -48,7 +48,9 @@ void CirclePath::activate(PathMetadata metadata)
       metadata.motionConstants.maxVelocity,
       sqrt(metadata.maximumCentripetalAcceleration * this->radius));
 
-  this->turnController = new errorcontroller(metadata.pidConstants);
+  this->omegaController = new errorcontroller(metadata.correctiveTurnConstants); 
+  this->alphaController = new errorcontroller(metadata.correctiveLinConstants); 
+
   this->profile = new TrapezoidalMotionProfile(metadata.motionConstants, this->arcLength);
 
   activated = true;  
@@ -59,9 +61,9 @@ void CirclePath::init(double timestamp)
 {
   this->profile->init(startingVelocity, endingVelocity);
   this->lastTimestamp = timestamp;
-  this->profile->setLastTimestamp(timestamp); 
-  this->turnController->setReference(startingVelocity);
-  this->turnController->setLastTimestamp(timestamp);
+  this->profile->setLastTimestamp(timestamp);  
+  this->omegaController->setLastTimestamp(timestamp);  
+  this->alphaController->setLastTimestamp(timestamp);
 }
 
 bool CirclePath::completed(double timestamp)
@@ -81,19 +83,23 @@ double CirclePath::getAngularVelocity(double linearVelocity)
 
 }
 
-PathFrameOutput CirclePath::calculateFrameOutput(double angularVelocity, double timestamp)
+PathFrameOutput CirclePath::calculateFrameOutput(double linearVelocity, double angularVelocity, double timestamp)
 {
   PathFrameOutput output;
   if (activated)
   { 
-    double correctiveOmega = turnController->calculate(angularVelocity, timestamp);
-    
-    output.linearVelocity = profile->generateSetpoint(timestamp).velocity * drivingDirection;
+    double correctiveOmega = omegaController->calculate(angularVelocity, timestamp); 
+    double correctiveAlpha = alphaController->calculate(linearVelocity, timestamp); 
+
+    output.linearVelocity = profile->generateSetpoint(timestamp).velocity * drivingDirection;  
+
     output.angularVelocity = getAngularVelocity(output.linearVelocity);  
 
-    turnController->setReference(output.angularVelocity);   
+    omegaController->setReference(output.angularVelocity);  
+    alphaController->setReference(output.linearVelocity);  
 
-    output.angularVelocity += correctiveOmega; 
+    output.angularVelocity += correctiveOmega;  
+    output.linearVelocity += correctiveAlpha;
     
     this->lastTimestamp = timestamp;
   }
