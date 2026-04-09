@@ -14,7 +14,8 @@ typedef struct
   double I;
   double D;
   double iLimit = -1;
-  double errorTolerance = 0;
+  double errorTolerance = 0; 
+  double minimumOutput = 0;
 } PIDConstants;
 
 class pidcontroller
@@ -36,7 +37,9 @@ private:
 
   double prevError = 0;
 
-  double setpoint;
+  double setpoint; 
+
+  double minimumOutput;
 
 public: 
 
@@ -68,7 +71,9 @@ class errorcontroller : public pidcontroller {
   public:   
      errorcontroller(PIDConstants consts) : pidcontroller(consts, 0){};  
     
-     double calculate(double currentRef, double timestamp); 
+     double calculate(double currentRef, double timestamp);  
+
+     void deactivate();
      
      void setReference(double ref);
 };

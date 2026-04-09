@@ -5,7 +5,8 @@ pidcontroller::pidcontroller(PIDConstants conts, double destination) : kP(conts.
                                                                        kI(conts.I),
                                                                        kD(conts.D),
                                                                        errorTolerance(conts.errorTolerance),
-                                                                       iLimit(conts.iLimit)
+                                                                       iLimit(conts.iLimit), 
+                                                                       minimumOutput(conts.minimumOutput)
 {
    setpoint = destination;
 };
@@ -14,7 +15,8 @@ pidcontroller::pidcontroller() : kP(0),
                                  kI(0),
                                  kD(0),
                                  errorTolerance(0),
-                                 iLimit(0)
+                                 iLimit(0), 
+                                 minimumOutput(0)
 {
    setpoint = 0;
 };
@@ -41,7 +43,13 @@ double pidcontroller::calculate(double position, double timestamp)
    }
    derivative = (error - prevError) / dt;
    prevError = error;
-   return (kP * error) + (kI * integral) + (kD * derivative);
+   double output = (kP * error) + (kI * integral) + (kD * derivative);  
+
+   if (fabs(output) < minimumOutput){ 
+      output = minimumOutput * copysign(1, output); 
+   }  
+   
+   return output;
 };
 
 void pidcontroller::setLastTimestamp(double timestamp)
@@ -70,11 +78,16 @@ double errorcontroller::calculate(double currentRef,  double timestamp){
   if (!active){ 
    return 0;
   }
-  return pidcontroller::calculate(currentRef - referencePos, timestamp);
+  return pidcontroller::calculate(referencePos - currentRef, timestamp);
 }  
 
 void errorcontroller::setReference(double ref){ 
    this->referencePos = ref; 
    active = true;
+} 
+
+void errorcontroller::deactivate(){ 
+   active = false; 
+   reset(); 
 }
 

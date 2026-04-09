@@ -8,22 +8,19 @@ class Intake : public Subsystem
 {
 
 private:
-  vex::motor intakeConveyor;
-  vex::pneumatics lowGoalFilter;
+  vex::motor intakeConveyor; 
 
 public:
   using Subsystem::get;
 
   static Intake *globalRef;
-  static double ABSOLUTE_CONVEYOR_SPEED;
-
+  
   Intake() : Subsystem(
                  "intake",
-                 {(EntrySet){"is_on", EntryType::BOOL},
-                  (EntrySet){"mid_scoring_engaged", EntryType::BOOL},
-                  (EntrySet){"last_engaged_millis", EntryType::DOUBLE}}),
-             intakeConveyor(vex::motor(vex::PORT7)),
-             lowGoalFilter(vex::pneumatics(Brain.ThreeWirePort.D))
+                 { 
+                  (EntrySet){"is_on", EntryType::BOOL},
+                   }),
+             intakeConveyor(vex::motor(vex::PORT8))
   {
     globalRef = this;
   }

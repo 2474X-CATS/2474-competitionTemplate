@@ -56,14 +56,12 @@ protected:
 
   pidcontroller *turnPID = nullptr; 
 
-  errorcontroller* correctiveAngularController = nullptr;
-  errorcontroller* correctiveLinearController = nullptr;
+  errorcontroller* alphaController = nullptr;
 
   TrapezoidalMotionProfile *drivingProfile = nullptr;
 
   bool initialized = false;
 
-  // bool isCounterClockwise;
   bool isGoingForward;
   double startingPoint[2];
   double lastPoint[2];
@@ -486,6 +484,54 @@ public:
                                           isOut(out) {};
 
   ~DeployDescore() override = default;
+}; 
+
+
+typedef struct{ 
+  double output; 
+  double duration; 
+  bool intaking; 
+} PCPhase;  
+
+class ParkClear : Command<Drivebase, Intake> {  
+  private:  
+
+    Drivebase& drivebaseRef;   
+    Intake& intakeRef;
+
+    bool stay; 
+    double endingPoint[2];  
+
+    int index = 0;   
+    int numPhases;  
+    double startingTimestamp;  
+
+    bool phaseInitialized = false;
+
+    vector<PCPhase> phases;
+
+  public: 
+    static double PARK_ZONE_WIDTH;   
+
+    CommandInterface* getCommand(vector<PCPhase> phases, bool stay){ 
+      return new ParkClear(*Drivebase::globalRef, *Intake::globalRef, phases, stay);
+    }
+
+    ParkClear(Drivebase& drive, Intake& intake, vector<PCPhase> phases, bool stay) :  
+    Command<Drivebase, Intake>(drive, intake),  
+    drivebaseRef(drive), 
+    intakeRef(intake),
+    phases(phases), 
+    stay(stay), 
+    numPhases(phases.size())
+    {};  
+  
+   protected:
+     void start() override;
+     void periodic() override;
+     bool isOver() override;
+     void end() override;
+
 };
 
 //---------------------------------------

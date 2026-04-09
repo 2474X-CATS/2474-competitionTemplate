@@ -7,8 +7,7 @@
 class Indexer : public Subsystem {  
 
    private:   
-    vex::motor indexerMotor;  
-    vex::pneumatics indexerHatch;   
+    vex::motor indexerMotor;    
     vex::optical colorSensor; 
     double lastBlockTimestamp = 0;
 
@@ -16,21 +15,18 @@ class Indexer : public Subsystem {
      using Subsystem::get;  
      
      static Indexer* globalRef;  
-     static double ABSOLUTE_INDEXER_SPEED;
-
+    
      Indexer(): 
      Subsystem( 
         "indexer", 
         { 
             (EntrySet){"is_on", EntryType::BOOL}, 
-            (EntrySet){"last_long_goal_pressed", EntryType::DOUBLE}, 
             (EntrySet){"detects_correct_color", EntryType::BOOL}, 
             (EntrySet){"detects_block", EntryType::BOOL}
         }
      ), 
-     indexerMotor(vex::motor(vex::PORT17)), 
-     indexerHatch(vex::pneumatics(Brain.ThreeWirePort.F)), 
-     colorSensor(vex::optical(vex::PORT14))
+     indexerMotor(vex::motor(vex::PORT7)), 
+     colorSensor(vex::optical(vex::PORT9))
      { 
        globalRef = this; 
      } 

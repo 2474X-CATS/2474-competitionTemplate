@@ -106,7 +106,6 @@ void RobotState::initializeState()
 
 void RobotState::updateRegular()
 { 
-   manuallyModifyState("odometry_enabled", false); 
    manuallyModifyState("scoring_high", Controller.ButtonR2.pressing());
    manuallyModifyState("scoring_mid", Controller.ButtonR1.pressing());
    manuallyModifyState("scoring_low", Controller.ButtonRight.pressing()); 
@@ -128,7 +127,14 @@ void RobotState::updateRegular()
 
    manuallyModifyState("outtaking", Controller.ButtonDown.pressing());
    manuallyModifyState("descore_in", Controller.ButtonL1.pressing());
-   manuallyModifyState("matchloader_out", Controller.ButtonL2.pressing());
+   manuallyModifyState("matchloader_out", Controller.ButtonL2.pressing()); 
+   /*
+   if (getStateOf("is_drive_inverted")){ 
+      setVibrationCode("..");
+   } else { 
+      disableVibrations(); 
+   } 
+   */
 }
 
 void RobotState::updateStopped()
@@ -140,7 +146,7 @@ void RobotState::updateStopped()
    manuallyModifyState("matchloader_out", false);
    manuallyModifyState("k_inversion_held", false);
    manuallyModifyState("descore_in", false);
-   manuallyModifyState("intaking", false); 
+   manuallyModifyState("intaking", false);  
    
 };
 

@@ -17,7 +17,7 @@ public:
 
    void initialize(); // All subsysytems in the subsystem list as a result of their instantiation are initialized here (Motor prep / sensor calibration)
 
-   void driverControl(); // Drive the robot using input
+   void driverControl(bool odometryEnabled); // Drive the robot using input
 
    void autonControl(); // Runs a series of commands that have been prior set by the "setAutonomusCommand" method
 

@@ -10,7 +10,6 @@ typedef struct
 
 class FeedForward
 {
-
    double kS;
    double kV;
    double kA;

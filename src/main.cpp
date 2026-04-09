@@ -58,16 +58,16 @@ int scheduleCallbacks()
   Competition.autonomous([]()
                          { robot.autonControl(); });
   Competition.drivercontrol([]()
-                            { robot.driverControl(); });
+                            { robot.driverControl(false); });
 
   drawLogo(RobotState::getStateOf("is_team_color_blue"));
   return 0;
 }
 
 void testDrive()
-{
+{ 
   thread telemetryThread = thread(runTelemetry);
-  robot.driverControl();
+  robot.driverControl(true);
 }
 
 void testAuto(vector<CommandInterface *> auton, bool startingLeft)
@@ -83,7 +83,7 @@ void testAuto(vector<CommandInterface *> auton, bool startingLeft)
   robot.setAutonomousCommand(auton);
   thread telemThread = thread(runTelemetry);
   robot.autonControl();
-  robot.driverControl();
+  robot.driverControl(false);
 }
 
 void configurateAutonomous(vector<Routine> routines)
@@ -100,7 +100,7 @@ void configurateAutonomous(vector<Routine> routines)
 
   if (sidePicker.getIsLeft())
   {
-    Drivebase::globalRef->setStartingPos((TILE_SIZE_MM * 2 + 430 - ROBOT_WIDTH_MM), 425);
+    Drivebase::globalRef->setStartingPos((TILE_SIZE_MM * 2 + 430 - ROBOT_WIDTH_MM), 425); 
     sideIndex = 0;
   }
   else
@@ -137,13 +137,13 @@ void startCommandCompetitiveMatch(vector<Routine> routines)
 }
 
 void driveCommandMatch(vector<Routine> routines)
-{
-  configurateAutonomous(routines);
+{ 
   thread telemThread = thread(runTelemetry);
+  configurateAutonomous(routines);
   awaitStartingSignal();
   drawLogo(RobotState::getStateOf("is_team_color_blue"));
   robot.autonControl();
-  robot.driverControl();
+  robot.driverControl(false);
 }
 
 //------------------------------>-------------------------------------------------------------------------------------------------------------------
@@ -156,17 +156,16 @@ int main()
   //--------------------DONT MODIFY (MOSTLY)-----------------
 
   Drivebase drive = Drivebase(0,0);
-  //Intake intake; 
-  //Indexer indexer;
-  //Matchloader matchloader;
-  //Hooks hooks;
+  Intake intake; 
+  Indexer indexer;
+  Matchloader matchloader;
+  Hooks hooks;
 
   robot.initialize();
 
-  RobotState::manuallyModifyState("color_sensitive", false);     // <- We don't have color-sort currently
+  RobotState::manuallyModifyState("color_sensitive", false);// We don't have color-sort currently
   RobotState::manuallyModifyState("is_counterclockwise", false); // Adjust to match inertial sensor orientation
-  RobotState::manuallyModifyState("odometry_enabled", true); 
-
+  
   //-------------------ROUTINE CREATION-------------------
 
   vector<Routine> routines;
@@ -228,33 +227,37 @@ int main()
 
   //startCommandCompetitiveMatch(routines);  //Uncomment when loading up for a comp
   //startCommandSkillsMatch(auto_skills(), false);  //Uncomment when loading up for skills
+  
   testDrive(); // Uncomment when getting driver practice
   
+  //driveCommandMatch(routines); 
+
   /*
   testAuto( 
-    {    
-      FollowCirclePath::getCommand( 
-        {
-            (BiarcEnum){ {TILE_SIZE_MM * 3.722, TILE_SIZE_MM * 1.65}, true }
+    {   
+      DriveToLocation(Zones::NAT_MID, TILE_SIZE_MM * 0.9, PathType::EUCLIDEAN, true),  
+      DrivePath::getCommand({45}, true, false),
+      FollowCirclePath::getCommand(  
+        { 
+          (BiarcEnum){ {TILE_SIZE_MM * 1, TILE_SIZE_MM * 1}, true}
         }, 
-        true
-      ),  
-      DriveForwardForTime::getCommand(0.27, 750, true), 
-      DriveToLocation(Zones::NAT_ML_RIGHT, TILE_SIZE_MM, PathType::EUCLIDEAN, false), 
-      TurnToLocation(Zones::NAT_ML_RIGHT), 
-      DriveForwardForTime::getCommand(0.25, 500, true), 
+        false
+      ), 
+      DrivePath::getCommand({270}, true, false), 
+      DriveForwardForTime::getCommand(0.125, 750, true),  
+      IntakeCubes::getCommand(750),
       ModifyRobotState::getCommand("is_drive_inverted", true), 
-      WaitFor::getCommand(200), 
-      FollowSplinePath::getCommand( 
-        {
-            array<double,2>{TILE_SIZE_MM * 5, TILE_SIZE_MM * 2 - ROBOT_LENGTH_MM/4},  
-            array<double,2>{TILE_SIZE_MM * 5, TILE_SIZE_MM * 2 - ROBOT_LENGTH_MM/4},
-        }
-      ),
+      DrivePath::getCommand({TILE_SIZE_MM * 1.15}, false, true), 
+      DriveForwardForTime::getCommand(-0.25, 500, false), 
+      DrivePath::getCommand({30, TILE_SIZE_MM/2+25, 90}, true, false),  
+      DriveForwardForTime::getCommand(0.35, 750, false)
     }, 
-    false
-  ); 
+    true
+  );    
   */
+  
+  
+  
   
 
 

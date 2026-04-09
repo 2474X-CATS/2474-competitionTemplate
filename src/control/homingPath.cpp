@@ -74,6 +74,10 @@ PathFrameOutput HomingPath::calculateFrameOutput(double x, double y, double head
    updateAnchorPoint(refPoint.progressT);
 
    return res;
+} 
+
+PathFrameOutput HomingPath::calculateFrameOutput(PathFrame frameData){ 
+   return calculateFrameOutput(frameData.positionX, frameData.positionY, frameData.angleHeading, frameData.linearVelocity, frameData.angularVelocity, frameData.timestamp);
 }
 
 BezierCurve *HomingPath::getCurve()

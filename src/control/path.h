@@ -28,7 +28,16 @@ typedef struct
    double positionX;
    double positionY;
    double angleHeading;
-} PathMetadata;
+} PathMetadata; 
+
+typedef struct{ 
+   double positionX; 
+   double positionY; 
+   double angleHeading; 
+   double linearVelocity; 
+   double angularVelocity; 
+   double timestamp;
+} PathFrame;
 
 class HomingPath
 {
@@ -83,6 +92,8 @@ public:
    HomingPath(array<array<double, 2>, 2> points, PathMetadata metadata);
 
    PathFrameOutput calculateFrameOutput(double x, double y, double heading, double linearVelocity, double angularVelocity, double timestamp);
+   
+   PathFrameOutput calculateFrameOutput(PathFrame frameData);
 
    void init(double timestamp);
 
@@ -136,7 +147,9 @@ public:
    CirclePath(BiarcEnum biarc, PathMetadata metadata);
    CirclePath(BiarcEnum biarc);
 
-   PathFrameOutput calculateFrameOutput(double linearVelocity, double angularVelocity, double timestamp);
+   PathFrameOutput calculateFrameOutput(double linearVelocity, double angularVelocity, double timestamp); 
+
+   PathFrameOutput calculateFrameOutput(PathFrame frameData);
 
    static void linkLeftToRight(CirclePath *path1, CirclePath *path2);
 

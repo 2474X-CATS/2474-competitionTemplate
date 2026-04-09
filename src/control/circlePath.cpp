@@ -83,6 +83,10 @@ double CirclePath::getAngularVelocity(double linearVelocity)
 
 }
 
+PathFrameOutput CirclePath::calculateFrameOutput(PathFrame frameData){ 
+  return calculateFrameOutput(frameData.linearVelocity, frameData.angularVelocity, frameData.timestamp);
+} 
+
 PathFrameOutput CirclePath::calculateFrameOutput(double linearVelocity, double angularVelocity, double timestamp)
 {
   PathFrameOutput output;

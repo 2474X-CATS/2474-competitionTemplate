@@ -41,7 +41,8 @@ void DrivePath::drivePeriodic()
     if (!initialized)
     {
         initializeDrive();
-        initialized = true;
+        initialized = true; 
+        
         RobotState::manuallyModifyState("intaking", intaking);
     }
     else
@@ -100,9 +101,18 @@ bool DrivePath::isDriveOver()
 }
 
 void DrivePath::initializeDrive()
-{
+{ 
+
+    double timestamp = Brain.Timer.time(); 
+
     isGoingForward = setpoints.at(operationsIndex) > 0;
-    drivingProfile = new TrapezoidalMotionProfile(drivebaseRef.getMotionConstants(), abs(setpoints.at(operationsIndex)));
+    drivingProfile = new TrapezoidalMotionProfile(drivebaseRef.getMotionConstants(), abs(setpoints.at(operationsIndex))); 
+
+    if (alphaController == nullptr){ 
+        alphaController = new errorcontroller(drivebaseRef.getCorrectiveLinearPID()); 
+    } else { 
+        alphaController->deactivate();
+    }
 
     referenceAngle = drivebaseRef.get<double>("Angle_Degrees_CCW");
 
@@ -114,28 +124,23 @@ void DrivePath::initializeDrive()
     
     RobotState::manuallyModifyState("odometry_enabled", true);
 
-    drivingProfile->setLastTimestamp(Brain.Timer.time()); 
+    drivingProfile->setLastTimestamp(timestamp);  
+    alphaController->setLastTimestamp(timestamp); 
+
 }
 
 void DrivePath::drive()
 {
-    double output;
-
-    double currentDist = hypot(
-        lastPoint[0] - startingPoint[0],
-        lastPoint[1] - startingPoint[1]);
-
-    TrapezoidalSetpoint setpoint;
-
-    setpoint = drivingProfile->generateSetpoint(Brain.Timer.time());
-
-    output = setpoint.velocity;
-
-    double positionError = setpoint.position - currentDist;
-    //output += (positionError * 0.03);
-
+    TrapezoidalSetpoint setpoint = drivingProfile->generateSetpoint(Brain.Timer.time());
+    
+    double correctiveAlpha = alphaController->calculate(drivebaseRef.get<double>("Linear_Velocity"), Brain.Timer.time());
+    double output = setpoint.velocity;
+    
     if (!isGoingForward)
-        output *= -1;
+        output *= -1; 
+    
+    alphaController->setReference(output);
+    output += correctiveAlpha; 
 
     drivebaseRef.manualDriveForward(output, -1);
 
@@ -150,7 +155,8 @@ bool DrivePath::isTurnOver()
 
 void DrivePath::initializeTurn()
 { 
-    RobotState::manuallyModifyState("odometry_enabled", false);
+    RobotState::manuallyModifyState("odometry_enabled", false); 
+
     turnPID = new pidcontroller(drivebaseRef.getTurningPID(), 0);
     turnPID->setLastTimestamp(Brain.Timer.time());
 }
@@ -309,6 +315,54 @@ void FlatAlignWithY::start()
     numOfOperations -= 2;
 };
 
+// 
+
+double ParkClear::PARK_ZONE_WIDTH = 19 * 25.4; 
+
+void ParkClear::start(){   
+
+    RobotState::manuallyModifyState("odometry_enabled", false); 
+    double currentX = drivebaseRef.get<double>("Pos_X"); 
+    double currentY = drivebaseRef.get<double>("Pos_Y"); 
+    double heading = toRadians(drivebaseRef.get<double>("Angle_Degrees_CCW"));
+    
+    if (stay){ 
+        endingPoint[0] = currentX; 
+        endingPoint[1] = currentY; 
+    } else { 
+        endingPoint[0] = currentX + (PARK_ZONE_WIDTH * cos(heading)); 
+        endingPoint[1] = currentY + (PARK_ZONE_WIDTH * sin(heading));
+    } 
+    
+    startingTimestamp = Brain.Timer.time();
+} 
+
+void ParkClear::periodic(){ 
+    if (Brain.Timer.time() - startingTimestamp < phases.at(index).duration){  
+       if (!phaseInitialized){  
+          RobotState::manuallyModifyState("intaking", phases.at(index).intaking);
+          phaseInitialized = true;
+       }
+       drivebaseRef.manualPercentageDrive(phases.at(index).output * 100);   
+       intakeRef.periodic();
+    } else {  
+       intakeRef.stop();
+       index++;  
+       phaseInitialized = false; 
+       startingTimestamp = Brain.Timer.time();
+    }
+}
+
+bool ParkClear::isOver(){ 
+    return index == numPhases;
+} 
+
+void ParkClear::end(){  
+    drivebaseRef.stop();  
+    drivebaseRef.scheduleSetpoint(endingPoint[0], endingPoint[1]);   
+    RobotState::manuallyModifyState("odometry_enabled", true);
+} 
+
 //
 
 void SlantedAlignWithX::start()
@@ -385,9 +439,7 @@ void FollowCirclePath::periodic(){
             index++;
         } else { 
             PathFrameOutput output = segments.at(index).calculateFrameOutput(  
-                drivebaseRef.get<double>("Linear_Velocity"),
-                drivebaseRef.get<double>("Angular_Velocity"), 
-                timestamp
+                drivebaseRef.getFrameData()
             ); 
             drivebaseRef.manualDriveWithCurvature(output.linearVelocity, output.angularVelocity); 
         }
@@ -417,12 +469,7 @@ void FollowSplinePath::start(){
 void FollowSplinePath::periodic(){  
 
     PathFrameOutput output = path->calculateFrameOutput( 
-        drivebaseRef.get<double>("Pos_X"), 
-        drivebaseRef.get<double>("Pos_Y"), 
-        drivebaseRef.get<double>("Angle_Degrees_CCW"),  
-        drivebaseRef.get<double>("Linear_Velocity"),
-        drivebaseRef.get<double>("Angular_Velocity"),
-        Brain.Timer.time()
+        drivebaseRef.getFrameData()
     ); 
 
     drivebaseRef.manualDriveWithCurvature(output.linearVelocity, output.angularVelocity);

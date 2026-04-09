@@ -26,11 +26,11 @@ void Robot::initialize()
   Subsystem::initSystems();
 };
 
-void Robot::driverControl()
+void Robot::driverControl(bool odometryEnabled)
 {
   RobotState::setMode(ControlType::DRIVER);
-  RobotState::manuallyModifyState("ready", true);
-  RobotState::manuallyModifyState("is_drive_inverted", false);
+  RobotState::manuallyModifyState("odometry_enabled", odometryEnabled);
+  RobotState::manuallyModifyState("is_drive_inverted", true);
   RobotState::manuallyModifyState("in_autonomous", false);
   //double timestamp;
   //timestamp = Brain.Timer.time();
@@ -70,7 +70,8 @@ void Robot::autonControl()
 {
   RobotState::setMode(ControlType::MANUAL);
   RobotState::manuallyModifyState("in_autonomous", true);
-  RobotState::manuallyModifyState("ready", true);
+  RobotState::manuallyModifyState("odometry_enabled", true); 
+  vex::wait(20, msec);  
   for (CommandInterface *command : Robot::autonomousCommand)
   {
     command->run();
